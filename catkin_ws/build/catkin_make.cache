@@ -1,0 +1,2 @@
+learning_joy:localization_data_pub
+-DCATKIN_DEVEL_PREFIX=/home/alexander/Documents/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/alexander/Documents/catkin_ws/install -G Unix Makefiles

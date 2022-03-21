@@ -1,0 +1,15 @@
+<launch>
+
+
+    <node pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+    </node>
+
+    <node pkg="learning_joy" type="teleop_joy_python.py" name="ps3vel"> </node>
+
+    <node pkg="rosserial_arduino" type="serial_node.py" name="rosserial_node"> 
+        <param name="port" type="string" value="/dev/ttyACM0" />
+    </node>
+
+  </launch>
