@@ -1,0 +1,202 @@
+#include "Arduino.h"
+#include "QuadEncoder.h"
+#include <ros.h>
+#include <std_msgs/Int32.h>
+#include <geometry_msgs/Twist.h>
+
+// Handles startup and shutdown of ROS
+ros::NodeHandle nh;
+
+// Keep track of the number of wheel ticks
+std_msgs::Int32 right_wheel_tick_count;
+ros::Publisher rightPub("right_ticks", &right_wheel_tick_count);
+
+std_msgs::Int32 left_wheel_tick_count;
+ros::Publisher leftPub("left_ticks", &left_wheel_tick_count);
+
+// https://github.com/mjs513/Teensy-4.x-Quad-Encoder-Library
+QuadEncoder myEnc1(1, 5, 4, 0); // Encoder on channel 1 of 4 available
+                                // Phase A (pin0), PhaseB(pin1), Pullups Req(0)
+QuadEncoder myEnc2(2, 2, 3, 0); // Encoder on channel 2 of 4 available
+                                // Phase A (pin2), PhaseB(pin3), Pullups Req(0)
+
+long int currentMillis = 0;
+long int previousMillis = 0;
+
+int leftWheel_speed = 0;
+int rightWheel_speed = 0;
+
+// ### Code from net ###
+// https://automaticaddison.com/how-to-control-a-robots-velocity-remotely-using-ros/
+// Motor A connections (left)
+// const int enA = 9;
+const int in1 = 9;
+const int in2 = 8;
+
+// Motor B connections (right)
+// const int enB = 10;
+const int in3 = 28;
+const int in4 = 29;
+
+float mapPwm(float x, float out_min, float out_max)
+{
+    return x * (out_max - out_min) + out_min;
+}
+
+void calc_pwm_values(const geometry_msgs::Twist &cmdVel)
+{
+    float fwdSpeed = cmdVel.linear.x;
+    float rotation = cmdVel.angular.z;
+    char buffer[7]; // the ASCII of the integer will be stored in this char array
+
+    float x = max(min(cmdVel.linear.x, 1.0f), -1.0f);
+    float z = max(min(cmdVel.angular.z, 1.0f), -1.0f);
+
+    float l = (cmdVel.linear.x - cmdVel.angular.z) / 2;
+    float r = (cmdVel.linear.x + cmdVel.angular.z) / 2;
+
+    uint16_t lPwm = mapPwm(fabs(l), 0, 800);
+    uint16_t rPwm = mapPwm(fabs(r), 0, 800);
+    if (cmdVel.linear.x != 0)
+    {
+        if (l > 0 || r > 0)
+        {
+            analogWrite(in1, rPwm);
+            analogWrite(in2, 0);
+
+            analogWrite(in3, lPwm);
+            analogWrite(in4, 0);
+        }
+        else if (l < 0 || r < 0)
+        {
+            analogWrite(in1, 0);
+            analogWrite(in2, rPwm);
+
+            analogWrite(in3, 0);
+            analogWrite(in4, lPwm);
+        }
+    }
+    else
+    {
+        analogWrite(in1, 0);
+        analogWrite(in2, 0);
+
+        analogWrite(in3, 0);
+        analogWrite(in4, 0);
+    }
+
+    /*
+    if (fwdSpeed > 0)
+    {
+        analogWrite(in1, fwdSpeed * 255);
+        analogWrite(in2, 0 * 255);
+
+        analogWrite(in3, fwdSpeed * 255);
+        analogWrite(in4, 0 * 255);
+        itoa(fwdSpeed, buffer, 10);
+        nh.loginfo(buffer);
+    }
+    else if (rotation > 0.05)
+    {
+        analogWrite(in1, fwdSpeed * 255 - rotation * 255);
+        analogWrite(in2, 0 * 255);
+        analogWrite(in3, fwdSpeed * 255);
+        analogWrite(in4, 0 * 255);
+        itoa(fwdSpeed, buffer, 10);
+        nh.loginfo(buffer);
+    }
+    else if (rotation < -0.05)
+    {
+        analogWrite(in1, fwdSpeed * 255);
+        analogWrite(in2, 0 * 255);
+        analogWrite(in3, fwdSpeed * 255 - rotation * 255);
+        analogWrite(in4, 0 * 255);
+        itoa(fwdSpeed, buffer, 10);
+        nh.loginfo(buffer);
+    }
+    else
+    {
+        analogWrite(in1, 0);
+        analogWrite(in2, 0);
+        analogWrite(in3, 0);
+        analogWrite(in4, 0);
+    }
+    */
+}
+
+ros::Subscriber<geometry_msgs::Twist> subCmdVel("cmd_vel", &calc_pwm_values);
+
+void setup()
+{
+    // speedInterrupt.begin(calcSpeed, 100000);
+    // Serial.begin(115200);
+    // while (!Serial && millis() < 4000)
+    //   ;
+
+    /* Initialize the ENC module. */
+    myEnc1.setInitConfig();
+    myEnc1.EncConfig.revolutionCountCondition = ENABLE;
+    myEnc1.EncConfig.positionModulusValue = 0;
+    myEnc1.init();
+
+    myEnc2.setInitConfig();
+    myEnc2.EncConfig.revolutionCountCondition = ENABLE;
+    myEnc2.EncConfig.positionInitialValue = 0;
+    myEnc2.init();
+
+    // motor pins
+    pinMode(in1, OUTPUT);
+    pinMode(in2, OUTPUT);
+    pinMode(in3, OUTPUT);
+    pinMode(in4, OUTPUT);
+
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
+
+    // ROS Setup
+    nh.getHardware()->setBaud(115200);
+    nh.initNode();
+    nh.advertise(rightPub);
+    nh.advertise(leftPub);
+    nh.subscribe(subCmdVel);
+}
+
+void loop()
+{
+    float sampleTime = 0.1;
+
+    currentMillis = millis();
+    float radius = 0.03; // 3 cm
+#define M_PI 3.141592653589793238462643
+    float wheel_circumference = 2 * M_PI * radius;
+    float tickPerRot = 468.6;
+    int enc1Val = 0;
+    int enc2Val = 0;
+    if (currentMillis - previousMillis > sampleTime * 50)
+    {
+        previousMillis = currentMillis;
+        // left_wheel_tick_count.data = myEnc2.read();
+        // right_wheel_tick_count.data = myEnc1.read();
+        enc1Val = myEnc1.read();
+        enc2Val = myEnc2.read();
+        left_wheel_tick_count.data = (wheel_circumference / tickPerRot * enc1Val) * 1 / sampleTime;
+        right_wheel_tick_count.data = (wheel_circumference / tickPerRot * enc2Val) * 1 / sampleTime;
+
+        rightPub.publish(&right_wheel_tick_count);
+        leftPub.publish(&left_wheel_tick_count);
+        enc1Val = 0;
+        enc2Val = 0;
+        // Calculate the velocity of the right and left wheels
+        char buffer[7]; // the ASCII of the integer will be stored in this char array
+        buffer[0] = 'h';
+        buffer[1] = 'e';
+        buffer[2] = 'j';
+        // itoa(pwmLeftOut, buffer, 10);
+        // nh.loginfo(buffer);
+    }
+
+    nh.spinOnce();
+    delay(10);
+}
