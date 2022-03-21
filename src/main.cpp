@@ -58,6 +58,41 @@ float mapPwm(float x, float out_min, float out_max)
     return x * (out_max - out_min) + out_min;
 }
 
+void cmdVelCb(const geometry_msgs::Twist &msg)
+{
+    float x = msg.linear.x;   // m/s
+    float th = msg.angular.z; // rad/s
+    float spd_left, spd_right;
+
+    if (x == 0 && th == 0)
+    {
+        moving = 0;
+        // drive.setSpeeds(0, 0);
+        return;
+    }
+
+    /* Indicate that we are moving */
+    moving = 1;
+
+    if (x == 0)
+    {
+        // Turn in place
+        spd_right = th * wheelTrack / 2.0;
+        spd_left = -spd_right;
+    }
+    else if (th == 0)
+    {
+        // Pure forward/backward motion
+        spd_left = spd_right = x;
+    }
+    else
+    {
+        // Rotation about a point in space
+        spd_left = x - th * wheelTrack / 2.0;
+        spd_right = x + th * wheelTrack / 2.0;
+    }
+}
+
 double dataPoint_reverse[5];
 int avgRPM = 0;
 uint16_t motor_driver(int16_t setpoint_right, int16_t setpoint_left, float rpm_right, float rpm_left)
@@ -151,93 +186,6 @@ uint16_t motor_driver(int16_t setpoint_right, int16_t setpoint_left, float rpm_r
     }
 }
 
-void calc_pwm_values(const geometry_msgs::Twist &cmdVel)
-{
-    float fwdSpeed = cmdVel.linear.x;
-    float rotation = cmdVel.angular.z;
-    char buffer[7]; // the ASCII of the integer will be stored in this char array
-
-    // float x = max(min(cmdVel.linear.x, 1.0f), -1.0f);
-    // float z = max(min(cmdVel.angular.z, 1.0f), -1.0f);
-
-    float l = (cmdVel.linear.x - cmdVel.angular.z) / 2;
-    float r = (cmdVel.linear.x + cmdVel.angular.z) / 2;
-
-    uint16_t lPwm = mapPwm(fabs(l), 0, 256);
-    uint16_t rPwm = mapPwm(fabs(r), 0, 256);
-
-    if (cmdVel.linear.x != 0)
-    {
-        if (l > 0)
-        {
-            // analogWrite(in1, rPwm);
-            // analogWrite(in2, 0);
-        }
-        if (r > 0)
-        {
-
-            // analogWrite(in3, lPwm);
-            // analogWrite(in4, 0);
-        }
-        if (l < 0)
-        {
-            // analogWrite(in1, 0);
-            // analogWrite(in2, rPwm);
-        }
-        if (r < 0)
-        {
-            // analogWrite(in3, 0);
-            // analogWrite(in4, lPwm);
-        }
-    }
-    else
-    {
-        analogWrite(in1, 0);
-        analogWrite(in2, 0);
-
-        analogWrite(in3, 0);
-        analogWrite(in4, 0);
-    }
-
-    /*
-    if (fwdSpeed > 0)
-    {
-        analogWrite(in1, fwdSpeed * 255);
-        analogWrite(in2, 0 * 255);
-
-        analogWrite(in3, fwdSpeed * 255);
-        analogWrite(in4, 0 * 255);
-        itoa(fwdSpeed, buffer, 10);
-        nh.loginfo(buffer);
-    }
-    else if (rotation > 0.05)
-    {
-        analogWrite(in1, fwdSpeed * 255 - rotation * 255);
-        analogWrite(in2, 0 * 255);
-        analogWrite(in3, fwdSpeed * 255);
-        analogWrite(in4, 0 * 255);
-        itoa(fwdSpeed, buffer, 10);
-        nh.loginfo(buffer);
-    }
-    else if (rotation < -0.05)
-    {
-        analogWrite(in1, fwdSpeed * 255);
-        analogWrite(in2, 0 * 255);
-        analogWrite(in3, fwdSpeed * 255 - rotation * 255);
-        analogWrite(in4, 0 * 255);
-        itoa(fwdSpeed, buffer, 10);
-        nh.loginfo(buffer);
-    }
-    else
-    {
-        analogWrite(in1, 0);
-        analogWrite(in2, 0);
-        analogWrite(in3, 0);
-        analogWrite(in4, 0);
-    }
-    */
-}
-
 ros::Subscriber<geometry_msgs::Twist> subCmdVel("cmd_vel", &calc_pwm_values);
 
 void setup()
@@ -293,25 +241,7 @@ void loop()
     float sampleTime = 5; // ms
 
     currentMillis = millis();
-    /*
-        setpoint = 0;
-        if (abs(setpoint) > 0 && abs(setpoint) < 100)
-        {
-            rightWheel_pid.tune(30, 3, 0);
-        }
-        else if (abs(setpoint) >= 100 && abs(setpoint) < 200)
-        {
-            rightWheel_pid.tune(35, 4, 0);
-        }
-        else if (abs(setpoint) >= 200 && abs(setpoint) < 300)
-        {
-            rightWheel_pid.tune(40, 3.5, 0);
-        }
-        else if (abs(setpoint) >= 300)
-        {
-            rightWheel_pid.tune(45, 4, 0);
-        }
-    */
+
     if (currentMillis - previousMillis > sampleTime)
     {
         previousMillis = currentMillis;
@@ -332,72 +262,6 @@ void loop()
         myEnc1.write(0);
         myEnc2.write(0);
         motor_driver(000, 000, rpm_right, rpm_left);
-
-        // motor_driver(100, 2, rpm_left);
-        /*
-            if (setpoint > 0)
-            {
-                for (int i = 1; i < 5; i++)
-                {
-                    dataPoint_reverse[i - 1] = dataPoint_reverse[i];
-                }
-                dataPoint_reverse[4] = rpm_right;
-                for (int i = 0; i < 5; i++)
-                {
-                    avgRPM = avgRPM + dataPoint_reverse[i];
-                }
-                avgRPM = avgRPM / 5;
-                rightWheel_pid.setpoint(setpoint);
-
-                output = rightWheel_pid.compute(avgRPM);
-
-                analogWrite(in3, output); // right reverse
-                analogWrite(in4, 0);      // right forward
-
-                //Serial.print(rightWheel_ticks);
-                //Serial.print("   -   ");
-                //Serial.print(setpoint);
-                //Serial.print("   -   ");
-                //Serial.print(avgRPM);
-                //Serial.print("   -   ");
-                //Serial.print("output ");
-                //Serial.println(output);
-
-            }
-
-            else if (setpoint < 0)
-            {
-                for (int i = 1; i < 5; i++)
-                {
-                    dataPoint_reverse[i - 1] = dataPoint_reverse[i];
-                }
-                dataPoint_reverse[4] = rpm_right;
-                for (int i = 0; i < 5; i++)
-                {
-                    avgRPM = avgRPM + dataPoint_reverse[i];
-                }
-                avgRPM = avgRPM / 5;
-                rightWheel_pid.setpoint(abs(setpoint));
-                output = rightWheel_pid.compute(abs(avgRPM));
-                analogWrite(in3, 0);      // right reverse
-                analogWrite(in4, output); // right forward
-
-                //    Serial.print(setpoint);
-                //    Serial.print("   -   ");
-                //   Serial.print(rpm_right);
-                //    Serial.print("   -   ");
-                //    Serial.print("output ");
-                //    Serial.println(output);
-
-            }
-            else if (setpoint == 0)
-            {
-                analogWrite(in1, 0); // right reverse
-                analogWrite(in2, 0); // right forward
-                analogWrite(in3, 0); // right reverse
-                analogWrite(in4, 0); // right forward
-            }
-            */
     }
 
     nh.spinOnce();
