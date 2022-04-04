@@ -67,14 +67,14 @@ set(localization_data_pub_CONFIG_INCLUDED TRUE)
 
 # set variables for source/devel/install prefixes
 if("FALSE" STREQUAL "TRUE")
-  set(localization_data_pub_SOURCE_PREFIX /home/alexander/Documents/catkin_ws/src/localization_data_pub)
-  set(localization_data_pub_DEVEL_PREFIX /home/alexander/Documents/catkin_ws/devel)
+  set(localization_data_pub_SOURCE_PREFIX /home/alexander/Documents/simpleBot/catkin_ws/src/localization_data_pub)
+  set(localization_data_pub_DEVEL_PREFIX /home/alexander/Documents/simpleBot/catkin_ws/devel)
   set(localization_data_pub_INSTALL_PREFIX "")
   set(localization_data_pub_PREFIX ${localization_data_pub_DEVEL_PREFIX})
 else()
   set(localization_data_pub_SOURCE_PREFIX "")
   set(localization_data_pub_DEVEL_PREFIX "")
-  set(localization_data_pub_INSTALL_PREFIX /home/alexander/Documents/catkin_ws/install)
+  set(localization_data_pub_INSTALL_PREFIX /home/alexander/Documents/simpleBot/catkin_ws/install)
   set(localization_data_pub_PREFIX ${localization_data_pub_INSTALL_PREFIX})
 endif()
 
@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/alexander/Documents/catkin_ws/install/lib;/opt/ros/melodic/lib)
+    foreach(path /home/alexander/Documents/simpleBot/catkin_ws/install/lib;/opt/ros/melodic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)

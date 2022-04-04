@@ -1,0 +1,12 @@
+  <launch>
+     <!-- Turtlesim Node-->
+    <node name="serial_node"        pkg="rosserial_arduino"      type="serial_node.py">
+    <param name="port"              type="string"               value="/dev/ttyACM0"/>
+    <param name="baud"              type="int"                  value="57600"/>
+    </node>
+
+    <node pkg="localization_data_pub" type="ekf_odom_pub" name="ekf_odom_pub" output="screen"/>
+    <node pkg="localization_data_pub" type="tf_pub" name="tf_pub"/>
+ 
+
+  </launch>

@@ -7,11 +7,13 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <cmath>
 
+#include <ros/console.h>
+
 // Create odometry data publishers
-ros::Publisher odom_data_pub;
-ros::Publisher odom_data_pub_quat;
-nav_msgs::Odometry odomNew;
-nav_msgs::Odometry odomOld;
+ros::Publisher odom_pub;
+ros::Publisher pub_quat;
+nav_msgs::Odometry newOdom;
+nav_msgs::Odometry oldOdom;
 
 // Initial pose
 const double initialX = 0.0;
@@ -29,8 +31,8 @@ const double WHEEL_BASE = 0.20; // Center of left tire to center of right tire
 const double TICKS_PER_METER = 2486;
 
 // Distance both wheels have traveled
-double distanceLeft = 0;
-double distanceRight = 0;
+double leftDistance = 0;
+double rightDistance = 0;
 
 // Flag to see if initial pose has been received
 bool initialPoseRecieved = false;
@@ -38,12 +40,11 @@ bool initialPoseRecieved = false;
 using namespace std;
 
 // Get initial_2d message from either Rviz clicks or a manual pose publisher
-void set_initial_2d(const geometry_msgs::PoseStamped &rvizClick)
+void setInitialPose(const geometry_msgs::PoseStamped &rvizClick)
 {
-
-    odomOld.pose.pose.position.x = rvizClick.pose.position.x;
-    odomOld.pose.pose.position.y = rvizClick.pose.position.y;
-    odomOld.pose.pose.orientation.z = rvizClick.pose.orientation.z;
+    oldOdom.pose.pose.position.x = rvizClick.pose.position.x;
+    oldOdom.pose.pose.position.y = rvizClick.pose.position.y;
+    oldOdom.pose.pose.orientation.z = rvizClick.pose.orientation.z;
     initialPoseRecieved = true;
 }
 
@@ -56,7 +57,7 @@ void Calc_Left(const std_msgs::Int64 &leftCount)
     {
 
         int leftTicks = (leftCount.data - lastCountL);
-        distanceLeft = leftTicks / TICKS_PER_METER;
+        leftDistance = leftTicks / TICKS_PER_METER;
     }
     lastCountL = leftCount.data;
 }
@@ -70,35 +71,32 @@ void Calc_Right(const std_msgs::Int64 &rightCount)
     {
 
         int rightTicks = rightCount.data - lastCountR;
-        distanceRight = rightTicks / TICKS_PER_METER;
+        rightDistance = rightTicks / TICKS_PER_METER;
     }
     lastCountR = rightCount.data;
 }
-
 void publish_quat()
 {
-
     tf2::Quaternion q;
-
-    q.setRPY(0, 0, odomNew.pose.pose.orientation.z);
+    q.setRPY(0, 0, newOdom.pose.pose.orientation.z);
 
     nav_msgs::Odometry quatOdom;
-    quatOdom.header.stamp = odomNew.header.stamp;
+    quatOdom.header.stamp = newOdom.header.stamp;
     quatOdom.header.frame_id = "odom";
     quatOdom.child_frame_id = "base_link";
-    quatOdom.pose.pose.position.x = odomNew.pose.pose.position.x;
-    quatOdom.pose.pose.position.y = odomNew.pose.pose.position.y;
-    quatOdom.pose.pose.position.z = odomNew.pose.pose.position.z;
+    quatOdom.pose.pose.position.x = newOdom.pose.pose.position.x;
+    quatOdom.pose.pose.position.y = newOdom.pose.pose.position.y;
+    quatOdom.pose.pose.position.z = newOdom.pose.pose.position.z;
     quatOdom.pose.pose.orientation.x = q.x();
     quatOdom.pose.pose.orientation.y = q.y();
     quatOdom.pose.pose.orientation.z = q.z();
     quatOdom.pose.pose.orientation.w = q.w();
-    quatOdom.twist.twist.linear.x = odomNew.twist.twist.linear.x;
-    quatOdom.twist.twist.linear.y = odomNew.twist.twist.linear.y;
-    quatOdom.twist.twist.linear.z = odomNew.twist.twist.linear.z;
-    quatOdom.twist.twist.angular.x = odomNew.twist.twist.angular.x;
-    quatOdom.twist.twist.angular.y = odomNew.twist.twist.angular.y;
-    quatOdom.twist.twist.angular.z = odomNew.twist.twist.angular.z;
+    quatOdom.twist.twist.linear.x = newOdom.twist.twist.linear.x;
+    quatOdom.twist.twist.linear.y = newOdom.twist.twist.linear.y;
+    quatOdom.twist.twist.linear.z = newOdom.twist.twist.linear.z;
+    quatOdom.twist.twist.angular.x = newOdom.twist.twist.angular.x;
+    quatOdom.twist.twist.angular.y = newOdom.twist.twist.angular.y;
+    quatOdom.twist.twist.angular.z = newOdom.twist.twist.angular.z;
 
     for (int i = 0; i < 36; i++)
     {
@@ -108,7 +106,7 @@ void publish_quat()
         }
         else if (i == 21 || i == 28 || i == 35)
         {
-            quatOdom.pose.covariance[i] += 0.1;
+            quatOdom.pose.covariance[i] += .165;
         }
         else
         {
@@ -116,21 +114,18 @@ void publish_quat()
         }
     }
 
-    odom_data_pub_quat.publish(quatOdom);
+    pub_quat.publish(quatOdom);
 }
 
 void update_odom()
 {
+    //average distance
+    double cycleDistance = (rightDistance + leftDistance) / 2;
+    //how many radians robot has turned since last cycle
+    double cycleAngle = asin((rightDistance - leftDistance) / WHEEL_BASE);
 
-    // Calculate the average distance
-    double cycleDistance = (distanceRight + distanceLeft) / 2;
-
-    // Calculate the number of radians the robot has turned since the last cycle
-    double cycleAngle = asin((distanceRight - distanceLeft) / WHEEL_BASE);
-
-    // Average angle during the last cycle
-    double avgAngle = cycleAngle / 2 + odomOld.pose.pose.orientation.z;
-
+    //average angle during last cycle
+    double avgAngle = cycleAngle / 2 + oldOdom.pose.pose.orientation.z;
     if (avgAngle > PI)
     {
         avgAngle -= 2 * PI;
@@ -139,95 +134,86 @@ void update_odom()
     {
         avgAngle += 2 * PI;
     }
-    else
+
+    //calculate new x, y, and theta
+    newOdom.pose.pose.position.x = oldOdom.pose.pose.position.x + cos(avgAngle) * cycleDistance;
+    newOdom.pose.pose.position.y = oldOdom.pose.pose.position.y + sin(avgAngle) * cycleDistance;
+    newOdom.pose.pose.orientation.z = cycleAngle + oldOdom.pose.pose.orientation.z;
+
+    //prevent lockup from a single erroneous cycle
+    if (isnan(newOdom.pose.pose.position.x) || isnan(newOdom.pose.pose.position.y) || isnan(newOdom.pose.pose.position.z))
     {
+        newOdom.pose.pose.position.x = oldOdom.pose.pose.position.x;
+        newOdom.pose.pose.position.y = oldOdom.pose.pose.position.y;
+        newOdom.pose.pose.orientation.z = oldOdom.pose.pose.orientation.z;
     }
 
-    // Calculate the new pose (x, y, and theta)
-    odomNew.pose.pose.position.x = odomOld.pose.pose.position.x + cos(avgAngle) * cycleDistance;
-    odomNew.pose.pose.position.y = odomOld.pose.pose.position.y + sin(avgAngle) * cycleDistance;
-    odomNew.pose.pose.orientation.z = cycleAngle + odomOld.pose.pose.orientation.z;
-
-    // Prevent lockup from a single bad cycle
-    if (isnan(odomNew.pose.pose.position.x) || isnan(odomNew.pose.pose.position.y) || isnan(odomNew.pose.pose.position.z))
+    //keep theta in range proper range
+    if (newOdom.pose.pose.orientation.z > PI)
     {
-        odomNew.pose.pose.position.x = odomOld.pose.pose.position.x;
-        odomNew.pose.pose.position.y = odomOld.pose.pose.position.y;
-        odomNew.pose.pose.orientation.z = odomOld.pose.pose.orientation.z;
+        newOdom.pose.pose.orientation.z -= 2 * PI;
+    }
+    else if (newOdom.pose.pose.orientation.z < -PI)
+    {
+        newOdom.pose.pose.orientation.z += 2 * PI;
     }
 
-    // Make sure theta stays in the correct range
-    if (odomNew.pose.pose.orientation.z > PI)
-    {
-        odomNew.pose.pose.orientation.z -= 2 * PI;
-    }
-    else if (odomNew.pose.pose.orientation.z < -PI)
-    {
-        odomNew.pose.pose.orientation.z += 2 * PI;
-    }
-    else
-    {
-    }
+    //calculate velocity
+    newOdom.header.stamp = ros::Time::now();
+    newOdom.twist.twist.linear.x = cycleDistance / (newOdom.header.stamp.toSec() - oldOdom.header.stamp.toSec());
+    newOdom.twist.twist.angular.z = cycleAngle / (newOdom.header.stamp.toSec() - oldOdom.header.stamp.toSec());
 
-    // Compute the velocity
-    odomNew.header.stamp = ros::Time::now();
-    odomNew.twist.twist.linear.x = cycleDistance / (odomNew.header.stamp.toSec() - odomOld.header.stamp.toSec());
-    odomNew.twist.twist.angular.z = cycleAngle / (odomNew.header.stamp.toSec() - odomOld.header.stamp.toSec());
+    //save odom x, y, and theta for use in next cycle
+    oldOdom.pose.pose.position.x = newOdom.pose.pose.position.x;
+    oldOdom.pose.pose.position.y = newOdom.pose.pose.position.y;
+    oldOdom.pose.pose.orientation.z = newOdom.pose.pose.orientation.z;
+    oldOdom.header.stamp = newOdom.header.stamp;
 
-    // Save the pose data for the next cycle
-    odomOld.pose.pose.position.x = odomNew.pose.pose.position.x;
-    odomOld.pose.pose.position.y = odomNew.pose.pose.position.y;
-    odomOld.pose.pose.orientation.z = odomNew.pose.pose.orientation.z;
-    odomOld.header.stamp = odomNew.header.stamp;
-
-    // Publish the odometry message
-    odom_data_pub.publish(odomNew);
+    //publish odom message
+    odom_pub.publish(newOdom);
 }
 
 int main(int argc, char **argv)
 {
+    //set fixed data fields
+    newOdom.header.frame_id = "odom";
+    newOdom.pose.pose.position.z = 0;
+    newOdom.pose.pose.orientation.x = 0;
+    newOdom.pose.pose.orientation.y = 0;
+    newOdom.twist.twist.linear.x = 0;
+    newOdom.twist.twist.linear.y = 0;
+    newOdom.twist.twist.linear.z = 0;
+    newOdom.twist.twist.angular.x = 0;
+    newOdom.twist.twist.angular.y = 0;
+    newOdom.twist.twist.angular.z = 0;
+    oldOdom.pose.pose.position.x = initialX;
+    oldOdom.pose.pose.position.y = initialY;
+    oldOdom.pose.pose.orientation.z = initialTheta;
 
-    // Set the data fields of the odometry message
-    odomNew.header.frame_id = "odom";
-    odomNew.pose.pose.position.z = 0;
-    odomNew.pose.pose.orientation.x = 0;
-    odomNew.pose.pose.orientation.y = 0;
-    odomNew.twist.twist.linear.x = 0;
-    odomNew.twist.twist.linear.y = 0;
-    odomNew.twist.twist.linear.z = 0;
-    odomNew.twist.twist.angular.x = 0;
-    odomNew.twist.twist.angular.y = 0;
-    odomNew.twist.twist.angular.z = 0;
-    odomOld.pose.pose.position.x = initialX;
-    odomOld.pose.pose.position.y = initialY;
-    odomOld.pose.pose.orientation.z = initialTheta;
-
-    // Launch ROS and create a node
-    ros::init(argc, argv, "ekf_odom_pub");
+    //handshake with ros master and create node object
+    ros::init(argc, argv, "encoder_odom_publisher");
     ros::NodeHandle node;
 
-    // Subscribe to ROS topics
+    //Subscribe to topics
     ros::Subscriber subForRightCounts = node.subscribe("right_ticks", 100, Calc_Right, ros::TransportHints().tcpNoDelay());
     ros::Subscriber subForLeftCounts = node.subscribe("left_ticks", 100, Calc_Left, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber subInitialPose = node.subscribe("initial_2d", 1, set_initial_2d);
+    ros::Subscriber subInitialPose = node.subscribe("initial_2d", 1, setInitialPose);
 
-    // Publisher of simple odom message where orientation.z is an euler angle
-    odom_data_pub = node.advertise<nav_msgs::Odometry>("odom_data_euler", 100);
+    //advertise publisher of simpler odom msg where orientation.z is an euler angle
+    odom_pub = node.advertise<nav_msgs::Odometry>("encoder/odom", 100);
 
-    // Publisher of full odom message where orientation is quaternion
-    odom_data_pub_quat = node.advertise<nav_msgs::Odometry>("odom_data_quat", 100);
+    //advertise publisher of full odom msg where orientation is quaternion
+    pub_quat = node.advertise<nav_msgs::Odometry>("encoder/odom_quat", 100);
 
     ros::Rate loop_rate(30);
-
-    while (ros::ok())
+    while (ros::ok)
     {
-
+        ros::spinOnce();
         if (initialPoseRecieved)
         {
             update_odom();
             publish_quat();
         }
-        ros::spinOnce();
         loop_rate.sleep();
     }
 

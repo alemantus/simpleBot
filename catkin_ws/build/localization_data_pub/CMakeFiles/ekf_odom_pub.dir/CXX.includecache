@@ -6,11 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/alexander/Documents/catkin_ws/src/localization_data_pub/src/ekf_odom_pub.cpp
+/home/alexander/Documents/simpleBot/catkin_ws/src/localization_data_pub/src/ekf_odom_pub.cpp
 ros/ros.h
-/home/alexander/Documents/catkin_ws/src/localization_data_pub/src/ros/ros.h
+/home/alexander/Documents/simpleBot/catkin_ws/src/localization_data_pub/src/ros/ros.h
 std_msgs/Int64.h
-/home/alexander/Documents/catkin_ws/src/localization_data_pub/src/std_msgs/Int64.h
+/home/alexander/Documents/simpleBot/catkin_ws/src/localization_data_pub/src/std_msgs/Int64.h
 nav_msgs/Odometry.h
 -
 geometry_msgs/PoseStamped.h
@@ -20,6 +20,8 @@ tf2/LinearMath/Quaternion.h
 tf2_ros/transform_broadcaster.h
 -
 cmath
+-
+ros/console.h
 -
 
 /opt/ros/melodic/include/geometry_msgs/Point.h

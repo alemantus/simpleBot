@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  tf2_ros
+  tf2
 )
 
 ## System dependencies are found with CMake's conventions
@@ -205,7 +207,13 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-
-	
 add_executable(ekf_odom_pub src/ekf_odom_pub.cpp)
 target_link_libraries(ekf_odom_pub ${catkin_LIBRARIES})
+
+
+add_executable(tf_pub src/tf_pub.cpp)
+target_link_libraries(tf_pub ${catkin_LIBRARIES})
+
+
+	
+

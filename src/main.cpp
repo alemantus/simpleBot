@@ -4,7 +4,7 @@
 #include <ros.h>
 #include <std_msgs/Int64.h>
 #include <geometry_msgs/Twist.h>
-
+#include "main.h"
 // Handles startup and shutdown of ROS
 ros::NodeHandle nh;
 
@@ -15,47 +15,52 @@ ros::Publisher rightPub("right_ticks", &right_wheel_tick_count);
 std_msgs::Int64 left_wheel_tick_count;
 ros::Publisher leftPub("left_ticks", &left_wheel_tick_count);
 
-QuadEncoder myEnc1(1, 5, 4, 0); // Encoder on channel 1 of 4 available
+QuadEncoder myEnc1(1, 4, 5, 0); // Encoder on channel 1 of 4 available
                                 // Phase A (pin0), PhaseB(pin1), Pullups Req(0)
-QuadEncoder myEnc2(2, 2, 3, 0); // Encoder on channel 2 of 4 available
+QuadEncoder myEnc2(2, 3, 2, 0); // Encoder on channel 2 of 4 available
                                 // Phase A (pin2), PhaseB(pin3), Pullups Req(0)
-
-long int currentMillis = 0;
-long int previousMillis = 0;
-
-long int leftWheel_ticks = 0;
-long int rightWheel_ticks = 0;
-
-const int in1 = 9;
-const int in2 = 8;
-
-// Motor B connections (right)
-// const int enB = 10;
-const int in3 = 28;
-const int in4 = 29;
-
-int setpoint = 0;
-
-float radius = 0.03; // 3 cm
-
-float wheel_circumference = 2 * 3.1415 * radius;
-float tickPerRot = 468.6;
-int enc1Val = 0;
-int enc2Val = 0;
-float rightWheel_mPerS = 0;
-float leftWheel_mPerS = 0;
 
 PIDController rightWheel_pid;
 PIDController leftWheel_pid;
 
-long map(long x, long in_min, long in_max, long out_min, long out_max)
+SetPointInfo leftPID, rightPID;
+
+void setSpeed(int leftMotor, int rightMotor)
 {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    if (leftMotor < 0 && rightMotor < 0)
+    {
+        analogWrite(in1, abs(leftMotor)); // left reverse
+        analogWrite(in2, 0);
+        analogWrite(in3, abs(rightMotor)); // right reverse
+        analogWrite(in4, 0);               // right forward
+    }
+    else if (leftMotor >= 0 && rightMotor < 0)
+    {
+        analogWrite(in1, 0); // left reverse
+        analogWrite(in2, leftMotor);
+        analogWrite(in3, abs(rightMotor)); // right reverse
+        analogWrite(in4, 0);               // right forward
+    }
+    else if (leftMotor < 0 && rightMotor >= 0)
+    {
+        analogWrite(in1, abs(leftMotor)); // left reverse
+        analogWrite(in2, 0);
+        analogWrite(in3, 0);          // right reverse
+        analogWrite(in4, rightMotor); // right forward
+    }
+    else if (leftMotor >= 0 && rightMotor >= 0)
+    {
+        analogWrite(in1, 0); // left reverse
+        analogWrite(in2, leftMotor);
+        analogWrite(in3, 0);          // right reverse
+        analogWrite(in4, rightMotor); // right forward
+    }
 }
 
-float mapPwm(float x, float out_min, float out_max)
+/* Convert meters per second to ticks per time frame */
+int SpeedToTicks(float v)
 {
-    return x * (out_max - out_min) + out_min;
+    return int(v * tickPerRot / (30.0 * 3.1415926535897932384626433832795 * wheelDiameter));
 }
 
 void cmdVelCb(const geometry_msgs::Twist &msg)
@@ -64,10 +69,14 @@ void cmdVelCb(const geometry_msgs::Twist &msg)
     float th = msg.angular.z; // rad/s
     float spd_left, spd_right;
 
+    /* Reset the auto stop timer */
+    // lastMotorCommand = millis();
+
     if (x == 0 && th == 0)
     {
         moving = 0;
         // drive.setSpeeds(0, 0);
+        setSpeed(0, 0);
         return;
     }
 
@@ -77,24 +86,79 @@ void cmdVelCb(const geometry_msgs::Twist &msg)
     if (x == 0)
     {
         // Turn in place
-        spd_right = th * wheelTrack / 2.0;
+        spd_right = th * baseWidth / 2.0;
         spd_left = -spd_right;
     }
     else if (th == 0)
     {
         // Pure forward/backward motion
-        spd_left = spd_right = x;
+        spd_left = x;
+        spd_right = x;
     }
     else
     {
         // Rotation about a point in space
-        spd_left = x - th * wheelTrack / 2.0;
-        spd_right = x + th * wheelTrack / 2.0;
+        spd_left = x - th * baseWidth / 2.0;
+        spd_right = x + th * baseWidth / 2.0;
     }
+
+    /* Set the target speeds in meters per second */
+    leftPID.TargetSpeed = spd_left;
+    rightPID.TargetSpeed = spd_right;
+
+    /* Convert speeds to encoder ticks per frame */
+    leftPID.TargetTicksPerFrame = SpeedToTicks(leftPID.TargetSpeed);
+    rightPID.TargetTicksPerFrame = SpeedToTicks(rightPID.TargetSpeed);
+}
+/* PID routine to compute the next motor commands */
+void doPID(SetPointInfo *p)
+{
+    long Perror;
+    long output;
+
+    Perror = p->TargetTicksPerFrame - (p->Encoder - p->PrevEnc);
+
+    // Derivative error is the delta Perror
+    output = (Kp * Perror + Kd * (Perror - p->PrevErr) + Ki * p->Ierror) / Ko;
+    p->PrevErr = Perror;
+    p->PrevEnc = p->Encoder;
+
+    output += p->output;
+
+    if (output >= MAXOUTPUT)
+        output = MAXOUTPUT;
+    else if (output <= -MAXOUTPUT)
+        output = -MAXOUTPUT;
+    else
+        p->Ierror += Perror;
+
+    p->output = output;
 }
 
-double dataPoint_reverse[5];
-int avgRPM = 0;
+/* Read the encoder values and call the PID routine */
+void updatePID()
+{
+    /* Read the encoders */
+    leftPID.Encoder = myEnc2.read();  // left encoder
+    rightPID.Encoder = myEnc1.read(); // right encoder
+
+    /* Record the time that the readings were taken */
+    // odomInfo.encoderTime = millis();
+    // odomInfo.encoderStamp = nh.now();
+
+    /* If we're not moving there is nothing more to do */
+    if (!moving)
+        return;
+
+    /* Compute PID update for each motor */
+    doPID(&leftPID);
+    doPID(&rightPID);
+
+    /* Set the motor speeds accordingly */
+    // drive.setSpeeds(leftPID.output, rightPID.output);
+    setSpeed(leftPID.output, rightPID.output);
+}
+
 uint16_t motor_driver(int16_t setpoint_right, int16_t setpoint_left, float rpm_right, float rpm_left)
 {
     int leftWheel_output = 0;
@@ -186,7 +250,7 @@ uint16_t motor_driver(int16_t setpoint_right, int16_t setpoint_left, float rpm_r
     }
 }
 
-ros::Subscriber<geometry_msgs::Twist> subCmdVel("cmd_vel", &calc_pwm_values);
+ros::Subscriber<geometry_msgs::Twist> subCmdVel("cmd_vel", &cmdVelCb);
 
 void setup()
 {
@@ -233,36 +297,52 @@ void setup()
     nh.initNode();
     nh.advertise(rightPub);
     nh.advertise(leftPub);
+    nh.subscribe(subCmdVel);
 }
 
 void loop()
 {
 
-    float sampleTime = 5; // ms
+    // float sampleTime = 5; // ms
 
-    currentMillis = millis();
+    // currentMillis = millis();
 
+    if (millis() > nextOdom)
+    {
+        right_wheel_tick_count.data = myEnc1.read(); // right encoder
+        left_wheel_tick_count.data = myEnc2.read();  // left encoder
+        rightPub.publish(&right_wheel_tick_count);
+        leftPub.publish(&left_wheel_tick_count);
+        nextOdom += ODOM_INTERVAL;
+    }
+
+    if (millis() > nextPID)
+    {
+        updatePID();
+        nextPID += PID_INTERVAL;
+    }
+    /*
     if (currentMillis - previousMillis > sampleTime)
     {
         previousMillis = currentMillis;
-        enc1Val = myEnc1.read(); // right encoder
-        enc2Val = myEnc2.read(); // left encoder
+
         // rightWheel_mPerS = (wheel_circumference / tickPerRot * enc1Val) * 1 / (sampleTime / 1000);
         // leftWheel_mPerS = (wheel_circumference / tickPerRot * enc2Val) * 1 / (sampleTime / 1000);
 
-        float rpm_right = float(enc1Val) / tickPerRot * 60.0 * 1 / (sampleTime / 1000);
-        float rpm_left = float(enc2Val) / tickPerRot * 60.0 * 1 / (sampleTime / 1000);
+        // float rpm_right = float(enc1Val) / tickPerRot * 60.0 * 1 / (sampleTime / 1000);
+        // float rpm_left = float(enc2Val) / tickPerRot * 60.0 * 1 / (sampleTime / 1000);
 
-        right_wheel_tick_count.data = right_wheel_tick_count.data + enc1Val;
-        left_wheel_tick_count.data = left_wheel_tick_count.data + enc2Val;
+        // right_wheel_tick_count.data = right_wheel_tick_count.data + enc1Val;
+        // left_wheel_tick_count.data = left_wheel_tick_count.data + enc2Val;
 
-        rightPub.publish(&right_wheel_tick_count);
-        leftPub.publish(&left_wheel_tick_count);
+        // rightPub.publish(&right_wheel_tick_count);
+        // leftPub.publish(&left_wheel_tick_count);
 
-        myEnc1.write(0);
-        myEnc2.write(0);
-        motor_driver(000, 000, rpm_right, rpm_left);
+        // myEnc1.write(0);
+        // myEnc2.write(0);
+        // motor_driver(000, 000, rpm_right, rpm_left);
     }
+    */
 
     nh.spinOnce();
 }

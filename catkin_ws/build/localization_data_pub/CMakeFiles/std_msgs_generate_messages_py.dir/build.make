@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/alexander/Documents/catkin_ws/src
+CMAKE_SOURCE_DIR = /home/alexander/Documents/simpleBot/catkin_ws/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/alexander/Documents/catkin_ws/build
+CMAKE_BINARY_DIR = /home/alexander/Documents/simpleBot/catkin_ws/build
 
 # Utility rule file for std_msgs_generate_messages_py.
 
@@ -63,10 +63,10 @@ localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/build: std_ms
 .PHONY : localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/build
 
 localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/clean:
-	cd /home/alexander/Documents/catkin_ws/build/localization_data_pub && $(CMAKE_COMMAND) -P CMakeFiles/std_msgs_generate_messages_py.dir/cmake_clean.cmake
+	cd /home/alexander/Documents/simpleBot/catkin_ws/build/localization_data_pub && $(CMAKE_COMMAND) -P CMakeFiles/std_msgs_generate_messages_py.dir/cmake_clean.cmake
 .PHONY : localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/clean
 
 localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/depend:
-	cd /home/alexander/Documents/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/alexander/Documents/catkin_ws/src /home/alexander/Documents/catkin_ws/src/localization_data_pub /home/alexander/Documents/catkin_ws/build /home/alexander/Documents/catkin_ws/build/localization_data_pub /home/alexander/Documents/catkin_ws/build/localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/alexander/Documents/simpleBot/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/alexander/Documents/simpleBot/catkin_ws/src /home/alexander/Documents/simpleBot/catkin_ws/src/localization_data_pub /home/alexander/Documents/simpleBot/catkin_ws/build /home/alexander/Documents/simpleBot/catkin_ws/build/localization_data_pub /home/alexander/Documents/simpleBot/catkin_ws/build/localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : localization_data_pub/CMakeFiles/std_msgs_generate_messages_py.dir/depend
 
