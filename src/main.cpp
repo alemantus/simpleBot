@@ -3,8 +3,14 @@
 #include <PIDController.h>
 #include <ros.h>
 #include <std_msgs/Int64.h>
+#include <std_msgs/Float32.h>
 #include <geometry_msgs/Twist.h>
 #include "main.h"
+#include <Wire.h>
+#include <Adafruit_INA219.h>
+
+Adafruit_INA219 ina219;
+
 // Handles startup and shutdown of ROS
 ros::NodeHandle nh;
 
@@ -14,6 +20,12 @@ ros::Publisher rightPub("right_ticks", &right_wheel_tick_count);
 
 std_msgs::Int64 left_wheel_tick_count;
 ros::Publisher leftPub("left_ticks", &left_wheel_tick_count);
+
+std_msgs::Float32 bat_voltage;
+ros::Publisher batVoltagePub("bat/voltage", &bat_voltage);
+
+std_msgs::Float32 bat_current;
+ros::Publisher batCurrentPub("bat/current", &bat_current);
 
 QuadEncoder myEnc1(1, 4, 5, 0); // Encoder on channel 1 of 4 available
                                 // Phase A (pin0), PhaseB(pin1), Pullups Req(0)
@@ -60,7 +72,7 @@ void setSpeed(int leftMotor, int rightMotor)
 /* Convert meters per second to ticks per time frame */
 int SpeedToTicks(float v)
 {
-    return int(v * tickPerRot / (30.0 * 3.1415926535897932384626433832795 * wheelDiameter));
+    return int(v * tickPerRot / (PID_RATE * 3.1415926535897932384626433832795 * wheelDiameter));
 }
 
 void cmdVelCb(const geometry_msgs::Twist &msg)
@@ -159,107 +171,25 @@ void updatePID()
     setSpeed(leftPID.output, rightPID.output);
 }
 
-uint16_t motor_driver(int16_t setpoint_right, int16_t setpoint_left, float rpm_right, float rpm_left)
-{
-    int leftWheel_output = 0;
-    int rightWheel_output = 0;
-
-    // "Adaptive" PID controller
-    if (abs(setpoint_right) > 0 && abs(setpoint_right) < 100)
-    {
-        rightWheel_pid.tune(30, 3, 0);
-    }
-    else if (abs(setpoint_right) >= 100 && abs(setpoint_right) < 200)
-    {
-        rightWheel_pid.tune(35, 4.5, 0);
-    }
-    else if (abs(setpoint_right) >= 200 && abs(setpoint_right) < 300)
-    {
-        rightWheel_pid.tune(40, 3.5, 0);
-    }
-    else if (abs(setpoint_right) >= 300)
-    {
-        rightWheel_pid.tune(45, 4, 0);
-    }
-
-    if (setpoint_right > 0)
-    {
-        /*
-        for (int i = 1; i < 5; i++)
-        {
-            dataPoint_reverse[i - 1] = dataPoint_reverse[i];
-        }
-        dataPoint_reverse[4] = rpm;
-        for (int i = 0; i < 5; i++)
-        {
-            avgRPM = avgRPM + dataPoint_reverse[i];
-        }
-        avgRPM = avgRPM / 5;
-        */
-        rightWheel_pid.setpoint(setpoint_right);
-
-        rightWheel_output = rightWheel_pid.compute(rpm_right);
-    }
-
-    // "Adaptive" PID controller
-    if (abs(setpoint_left) > 0 && abs(setpoint_left) < 100)
-    {
-        leftWheel_pid.tune(30, 3, 0);
-    }
-    else if (abs(setpoint_left) >= 100 && abs(setpoint_left) < 200)
-    {
-        leftWheel_pid.tune(35, 4.5, 0);
-    }
-    else if (abs(setpoint_left) >= 200 && abs(setpoint_left) < 300)
-    {
-        leftWheel_pid.tune(40, 3.5, 0);
-    }
-    else if (abs(setpoint_left) >= 300)
-    {
-        leftWheel_pid.tune(45, 4, 0);
-    }
-
-    if (setpoint_left > 0)
-    {
-        /*
-        for (int i = 1; i < 5; i++)
-        {
-            dataPoint_reverse[i - 1] = dataPoint_reverse[i];
-        }
-        dataPoint_reverse[4] = rpm;
-        for (int i = 0; i < 5; i++)
-        {
-            avgRPM = avgRPM + dataPoint_reverse[i];
-        }
-        avgRPM = avgRPM / 5;
-        */
-        leftWheel_pid.setpoint(setpoint_left);
-
-        leftWheel_output = leftWheel_pid.compute(rpm_left);
-    }
-
-    if (setpoint_left > 0)
-    {
-        analogWrite(in1, leftWheel_output); // left reverse
-        analogWrite(in2, 0);                // right forward
-    }
-    if (setpoint_right > 0)
-    {
-        analogWrite(in3, rightWheel_output); // right reverse
-        analogWrite(in4, 0);                 // right forward
-    }
-}
-
 ros::Subscriber<geometry_msgs::Twist> subCmdVel("cmd_vel", &cmdVelCb);
 
 void setup()
 {
-    // speedInterrupt.begin(calcSpeed, 100000);
-    Serial.begin(9600);
-    Serial.setTimeout(50);
-    // while (!Serial && millis() < 4000)
-    //   ;
+    // Ensures ROS is running before we move on
+    while (!nh.connected())
+    {
+        nh.spinOnce();
+    }
 
+    if (!ina219.begin())
+    {
+        Serial.println("Failed to find INA219 chip");
+        while (1)
+        {
+            delay(10);
+        }
+    }
+    ina219.setCalibration_32V_1A();
     /* Initialize the ENC module. */
     myEnc1.setInitConfig();
     myEnc1.EncConfig.revolutionCountCondition = ENABLE;
@@ -297,52 +227,65 @@ void setup()
     nh.initNode();
     nh.advertise(rightPub);
     nh.advertise(leftPub);
+    nh.advertise(batVoltagePub);
+    nh.advertise(batCurrentPub);
     nh.subscribe(subCmdVel);
 }
 
 void loop()
 {
-
     // float sampleTime = 5; // ms
 
     // currentMillis = millis();
 
+    // Get PID params or set default value
+    //nh.getParam("Ki", Ki, 1);
+    //nh.getParam("Kd", Kd, 1);
+    //nh.getParam("Kp", Kp, 1);
+
+    if (!nh.getParam("rosparam/Kp", &Kp))
+    {
+        Kp = 20;
+        //nh.setParam("rosparam/Kp", 20);
+    }
+    if (!nh.getParam("rosparam/Ki", &Ki))
+    {
+        //nh.setParam("rosparam/Ki", 0);
+        Ki = 0;
+    }
+    if (!nh.getParam("rosparam/Kd", &Kd))
+    {
+        //nh.setParam("rosparam/Kd", 0);
+        Kd = 0;
+    }
+    if (!nh.getParam("rosparam/Ko", &Ko))
+    {
+        //nh.setParam("rosparam/K0", 120);
+        Ko = 120;
+    }
+
+    bat_voltage.data = ina219.getBusVoltage_V();
+    bat_current.data = ina219.getPower_mW();
+
+    // Publish tick counter for odom
     if (millis() > nextOdom)
     {
         right_wheel_tick_count.data = myEnc1.read(); // right encoder
         left_wheel_tick_count.data = myEnc2.read();  // left encoder
         rightPub.publish(&right_wheel_tick_count);
         leftPub.publish(&left_wheel_tick_count);
+        batVoltagePub.publish(&bat_voltage);
+        batCurrentPub.publish(&bat_current);
         nextOdom += ODOM_INTERVAL;
     }
 
+    // Update PID controller and motor speed
     if (millis() > nextPID)
     {
         updatePID();
         nextPID += PID_INTERVAL;
     }
-    /*
-    if (currentMillis - previousMillis > sampleTime)
-    {
-        previousMillis = currentMillis;
 
-        // rightWheel_mPerS = (wheel_circumference / tickPerRot * enc1Val) * 1 / (sampleTime / 1000);
-        // leftWheel_mPerS = (wheel_circumference / tickPerRot * enc2Val) * 1 / (sampleTime / 1000);
-
-        // float rpm_right = float(enc1Val) / tickPerRot * 60.0 * 1 / (sampleTime / 1000);
-        // float rpm_left = float(enc2Val) / tickPerRot * 60.0 * 1 / (sampleTime / 1000);
-
-        // right_wheel_tick_count.data = right_wheel_tick_count.data + enc1Val;
-        // left_wheel_tick_count.data = left_wheel_tick_count.data + enc2Val;
-
-        // rightPub.publish(&right_wheel_tick_count);
-        // leftPub.publish(&left_wheel_tick_count);
-
-        // myEnc1.write(0);
-        // myEnc2.write(0);
-        // motor_driver(000, 000, rpm_right, rpm_left);
-    }
-    */
-
+    // spin ROS
     nh.spinOnce();
 }

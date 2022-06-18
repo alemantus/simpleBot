@@ -22,10 +22,13 @@ float baseWidth = 0.22;
 float ticksPerMeter = tickPerRot / (PI * wheelDiameter);
 
 /* PID Parameters */
-int Kp = 5;
+//int Kp = 5;
+//int Kd = 0;
+//int Ki = 2;
+int Kp = 0;
 int Kd = 0;
-int Ki = 2;
-int Ko = 5;
+int Ki = 0;
+int Ko = 0;
 
 int enc1Val = 0;
 int enc2Val = 0;
@@ -52,7 +55,7 @@ typedef struct
 const float ODOM_INTERVAL = 1000.0 / ODOM_RATE;
 
 /* Rate at which encoders are sampled and PID loop is updated */
-#define PID_RATE 30 // Hz
+#define PID_RATE 50 // Hz
 const float PID_INTERVAL = 1000.0 / PID_RATE;
 
 /* Counters to track update rates for PID and Odometry */
