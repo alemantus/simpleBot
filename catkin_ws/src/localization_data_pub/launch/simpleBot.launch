@@ -3,10 +3,49 @@
     <node name="serial_node"        pkg="rosserial_arduino"      type="serial_node.py">
     <param name="port"              type="string"               value="/dev/ttyACM0"/>
     <param name="baud"              type="int"                  value="57600"/>
+
+
     </node>
 
+    
     <node pkg="localization_data_pub" type="ekf_odom_pub" name="ekf_odom_pub" output="screen"/>
     <node pkg="localization_data_pub" type="tf_pub" name="tf_pub"/>
- 
 
+    <param name="/rosparam/Kp" value="10.0" />
+    <param name="/rosparam/Ki" value="0.00001" />
+    <param name="/rosparam/Kd" value="0.0" />
+    <param name="/rosparam/Ko" value="50.0" />
+    <param name="/rosparam/PID" value="5.0" />
+
+
+      <!-- camera is oriented downward, camera cable goes backward [option 1] -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="main_camera_frame" args="0.05 0 -0.07 -1.5707963 0 3.1415926 base_link main_camera_optical"/>
+
+    <!-- camera is oriented downward, camera cable goes forward  [option 2] -->
+    <!--<node pkg="tf2_ros" type="static_transform_publisher" name="main_camera_frame" args="0.05 0 -0.07 1.5707963 0 3.1415926 base_link main_camera_optical"/>-->
+
+    <!-- camera is oriented upward, camera cable goes backward   [option 3] -->
+    <!--<node pkg="tf2_ros" type="static_transform_publisher" name="main_camera_frame" args="0.05 0 0.07 1.5707963 0 0 base_link main_camera_optical"/>-->
+
+    <!-- camera is oriented upward, camera cable goes forward    [option 4] -->
+    <!--<node pkg="tf2_ros" type="static_transform_publisher" name="main_camera_frame" args="0.05 0 0.07 -1.5707963 0 0 base_link main_camera_optical"/>-->
+
+    <!-- camera node -->
+    <!-- <node pkg="nodelet" type="nodelet" name="main_camera" args="load cv_camera/CvCameraNodelet nodelet_manager" clear_params="true"> -->
+    <node pkg="jetson_camera" type="jetson_camera_node" name="main_camera" clear_params="true" output="screen">
+        <param name="cap_width" value="1280"/>
+        <param name="cap_height" value="720"/>
+        <param name="width" value="640"/>
+        <param name="height" value="480"/>
+        <param name="fps" value="60"/>
+
+        <param name="frame_id" value="main_camera_optical"/>
+        <param name="camera_info_url" value="file://$(find jetson_camera)/camera_info/raspicam_v2.yaml"/>
+    </node>
+
+    <!-- camera visualization markers -->
+    <node pkg="clever" type="camera_markers" ns="main_camera" name="main_camera_markers">
+        <param name="scale" value="3.0"/>
+    </node>
+    
   </launch>

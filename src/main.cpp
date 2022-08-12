@@ -3,6 +3,7 @@
 #include <PIDController.h>
 #include <ros.h>
 #include <std_msgs/Int64.h>
+#include <std_msgs/Int16.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Twist.h>
 #include "main.h"
@@ -20,6 +21,12 @@ ros::Publisher rightPub("right_ticks", &right_wheel_tick_count);
 
 std_msgs::Int64 left_wheel_tick_count;
 ros::Publisher leftPub("left_ticks", &left_wheel_tick_count);
+
+std_msgs::Int16 left_wheel_pwm;
+ros::Publisher leftPWMPub("left_pwm", &left_wheel_pwm);
+
+std_msgs::Int16 right_wheel_pwm;
+ros::Publisher rightPWMPub("right_pwm", &right_wheel_pwm);
 
 std_msgs::Float32 bat_voltage;
 ros::Publisher batVoltagePub("bat/voltage", &bat_voltage);
@@ -39,6 +46,9 @@ SetPointInfo leftPID, rightPID;
 
 void setSpeed(int leftMotor, int rightMotor)
 {
+    rightPWMPub.publish(rightMotor);
+    leftPWMPub.publish(leftMotor);
+
     if (leftMotor < 0 && rightMotor < 0)
     {
         analogWrite(in1, abs(leftMotor)); // left reverse
@@ -211,22 +221,24 @@ void setup()
     digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
     digitalWrite(in4, LOW);
+    /*
+        rightWheel_pid.begin(); // initialize the PID instance
 
-    rightWheel_pid.begin(); // initialize the PID instance
+        rightWheel_pid.tune(24, 8, 20); // Tune the PID, arguments: kP, kI, kD
+        rightWheel_pid.limit(0, 255);   // Limit the PID output between 0 and 255, this is important to get rid of integral windup!
 
-    rightWheel_pid.tune(24, 8, 20); // Tune the PID, arguments: kP, kI, kD
-    rightWheel_pid.limit(0, 255);   // Limit the PID output between 0 and 255, this is important to get rid of integral windup!
+        leftWheel_pid.begin(); // initialize the PID instance
 
-    leftWheel_pid.begin(); // initialize the PID instance
-
-    leftWheel_pid.tune(24, 8, 20); // Tune the PID, arguments: kP, kI, kD
-    leftWheel_pid.limit(0, 255);   // Limit the PID output between 0 and 255, this is important to get rid of integral windup!
-
+        leftWheel_pid.tune(24, 8, 20); // Tune the PID, arguments: kP, kI, kD
+        leftWheel_pid.limit(0, 255);   // Limit the PID output between 0 and 255, this is important to get rid of integral windup!
+    */
     // ROS Setup
     nh.getHardware()->setBaud(57600);
     nh.initNode();
     nh.advertise(rightPub);
     nh.advertise(leftPub);
+    nh.advertise(rightPWMPub);
+    nh.advertise(leftPWMPub);
     nh.advertise(batVoltagePub);
     nh.advertise(batCurrentPub);
     nh.subscribe(subCmdVel);
@@ -239,33 +251,40 @@ void loop()
     // currentMillis = millis();
 
     // Get PID params or set default value
-    //nh.getParam("Ki", Ki, 1);
-    //nh.getParam("Kd", Kd, 1);
-    //nh.getParam("Kp", Kp, 1);
+    // nh.getParam("/rosparam/Ki", Ki);
+    // nh.getParam("/rosparam/Kd", Kd);
+    // nh.getParam("/rosparam/Kp", Kp);
+    // nh.getParam("/rosparam/Ko", Ko);
+    nh.getParam("/rosparam/Kp", &Kp, 1);
+    nh.getParam("/rosparam/Ki", &Ki, 1);
+    nh.getParam("/rosparam/Kd", &Kd, 1);
+    nh.getParam("/rosparam/Ko", &Ko, 1);
+    nh.getParam("/rosparam/PID", &PID_INTERVAL, 1);
 
-    if (!nh.getParam("rosparam/Kp", &Kp))
+    /*
+    if (!nh.getParam("/rosparam/Kp", &Kp, 1))
     {
         Kp = 20;
-        //nh.setParam("rosparam/Kp", 20);
+        // nh.setParam("rosparam/Kp", 20);
     }
-    if (!nh.getParam("rosparam/Ki", &Ki))
+    if (!nh.getParam("/rosparam/Ki", &Ki, 1))
     {
-        //nh.setParam("rosparam/Ki", 0);
+        // nh.setParam("rosparam/Ki", 0);
         Ki = 0;
     }
-    if (!nh.getParam("rosparam/Kd", &Kd))
+    if (!nh.getParam("/rosparam/Kd", &Kd, 1))
     {
-        //nh.setParam("rosparam/Kd", 0);
+        // nh.setParam("rosparam/Kd", 0);
         Kd = 0;
     }
-    if (!nh.getParam("rosparam/Ko", &Ko))
+    if (!nh.getParam("/rosparam/Ko", &Ko, 1))
     {
-        //nh.setParam("rosparam/K0", 120);
+        // nh.setParam("rosparam/K0", 120);
         Ko = 120;
     }
-
-    bat_voltage.data = ina219.getBusVoltage_V();
-    bat_current.data = ina219.getPower_mW();
+    */
+    // bat_voltage.data = ina219.getBusVoltage_V();
+    // bat_current.data = ina219.getPower_mW();
 
     // Publish tick counter for odom
     if (millis() > nextOdom)
@@ -274,8 +293,8 @@ void loop()
         left_wheel_tick_count.data = myEnc2.read();  // left encoder
         rightPub.publish(&right_wheel_tick_count);
         leftPub.publish(&left_wheel_tick_count);
-        batVoltagePub.publish(&bat_voltage);
-        batCurrentPub.publish(&bat_current);
+        // batVoltagePub.publish(&bat_voltage);
+        // batCurrentPub.publish(&bat_current);
         nextOdom += ODOM_INTERVAL;
     }
 
