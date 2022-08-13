@@ -221,6 +221,9 @@ EMPY_SCRIPT:STRING=/usr/bin/empy
 //The directory containing a CMake configuration file for GMock.
 GMock_DIR:PATH=GMock_DIR-NOTFOUND
 
+//Dependencies for the target
+GSCamNodelet_LIB_DEPENDS:STATIC=general;gscam;general;/opt/ros/melodic/lib/libimage_transport.so;general;/opt/ros/melodic/lib/libmessage_filters.so;general;/opt/ros/melodic/lib/libnodeletlib.so;general;/opt/ros/melodic/lib/libbondcpp.so;general;/usr/lib/aarch64-linux-gnu/libuuid.so;general;/opt/ros/melodic/lib/libclass_loader.so;general;/usr/lib/libPocoFoundation.so;general;/usr/lib/aarch64-linux-gnu/libdl.so;general;/opt/ros/melodic/lib/libroslib.so;general;/opt/ros/melodic/lib/librospack.so;general;/usr/lib/aarch64-linux-gnu/libpython2.7.so;general;/usr/lib/aarch64-linux-gnu/libboost_program_options.so;general;/usr/lib/aarch64-linux-gnu/libtinyxml2.so;general;/opt/ros/melodic/lib/libcamera_info_manager.so;general;/opt/ros/melodic/lib/libcamera_calibration_parsers.so;general;/opt/ros/melodic/lib/libroscpp.so;general;/usr/lib/aarch64-linux-gnu/libboost_filesystem.so;general;/opt/ros/melodic/lib/librosconsole.so;general;/opt/ros/melodic/lib/librosconsole_log4cxx.so;general;/opt/ros/melodic/lib/librosconsole_backend_interface.so;general;/usr/lib/aarch64-linux-gnu/liblog4cxx.so;general;/usr/lib/aarch64-linux-gnu/libboost_regex.so;general;/opt/ros/melodic/lib/libxmlrpcpp.so;general;/opt/ros/melodic/lib/libroscpp_serialization.so;general;/opt/ros/melodic/lib/librostime.so;general;/opt/ros/melodic/lib/libcpp_common.so;general;/usr/lib/aarch64-linux-gnu/libboost_system.so;general;/usr/lib/aarch64-linux-gnu/libboost_thread.so;general;/usr/lib/aarch64-linux-gnu/libboost_chrono.so;general;/usr/lib/aarch64-linux-gnu/libboost_date_time.so;general;/usr/lib/aarch64-linux-gnu/libboost_atomic.so;general;/usr/lib/aarch64-linux-gnu/libpthread.so;general;/usr/lib/aarch64-linux-gnu/libconsole_bridge.so.0.4;general;gstreamer-1.0;general;gobject-2.0;general;glib-2.0;general;gstapp-1.0;general;gstbase-1.0;general;gstreamer-1.0;general;gobject-2.0;general;glib-2.0;
+
 //Path to a file.
 GTEST_INCLUDE_DIR:PATH=/usr/include
 
@@ -244,6 +247,12 @@ LSB_RELEASE_EXECUTABLE:FILEPATH=/usr/bin/lsb_release
 
 //Path to a program.
 NOSETESTS:FILEPATH=/usr/bin/nosetests-2.7
+
+//The directory containing a CMake configuration file for OpenCV.
+OpenCV_DIR:PATH=/usr/lib/aarch64-linux-gnu/cmake/opencv4
+
+//pkg-config executable
+PKG_CONFIG_EXECUTABLE:FILEPATH=/usr/bin/pkg-config
 
 //Path to a program.
 PYTHON_EXECUTABLE:FILEPATH=/usr/bin/python2
@@ -290,11 +299,44 @@ actionlib_DIR:PATH=/opt/ros/melodic/share/actionlib/cmake
 //The directory containing a CMake configuration file for actionlib_msgs.
 actionlib_msgs_DIR:PATH=/opt/ros/melodic/share/actionlib_msgs/cmake
 
+//The directory containing a CMake configuration file for bond.
+bond_DIR:PATH=/opt/ros/melodic/share/bond/cmake
+
+//The directory containing a CMake configuration file for bondcpp.
+bondcpp_DIR:PATH=/opt/ros/melodic/share/bondcpp/cmake
+
+//The directory containing a CMake configuration file for camera_calibration_parsers.
+camera_calibration_parsers_DIR:PATH=/opt/ros/melodic/share/camera_calibration_parsers/cmake
+
+//The directory containing a CMake configuration file for camera_info_manager.
+camera_info_manager_DIR:PATH=/opt/ros/melodic/share/camera_info_manager/cmake
+
 //The directory containing a CMake configuration file for catkin.
 catkin_DIR:PATH=/opt/ros/melodic/share/catkin/cmake
 
+//The directory containing a CMake configuration file for class_loader.
+class_loader_DIR:PATH=/opt/ros/melodic/share/class_loader/cmake
+
+//The directory containing a CMake configuration file for compressed_image_transport.
+compressed_image_transport_DIR:PATH=/opt/ros/melodic/share/compressed_image_transport/cmake
+
 //The directory containing a CMake configuration file for cpp_common.
 cpp_common_DIR:PATH=/opt/ros/melodic/share/cpp_common/cmake
+
+//The directory containing a CMake configuration file for cv2_bridge.
+cv2_bridge_DIR:PATH=cv2_bridge_DIR-NOTFOUND
+
+//The directory containing a CMake configuration file for cv_bridge.
+cv_bridge_DIR:PATH=/opt/ros/melodic/share/cv_bridge/cmake
+
+//The directory containing a CMake configuration file for dynamic_reconfigure.
+dynamic_reconfigure_DIR:PATH=/opt/ros/melodic/share/dynamic_reconfigure/cmake
+
+//Value Computed by CMake
+followLine_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/followLine
+
+//Value Computed by CMake
+followLine_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/followLine
 
 //The directory containing a CMake configuration file for gencpp.
 gencpp_DIR:PATH=/opt/ros/melodic/share/gencpp/cmake
@@ -339,6 +381,17 @@ googletest-distribution_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/ca
 googletest-distribution_SOURCE_DIR:STATIC=/usr/src/googletest
 
 //Value Computed by CMake
+gscam_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/gscam
+
+gscam_DIR:PATH=
+
+//Dependencies for the target
+gscam_LIB_DEPENDS:STATIC=general;/opt/ros/melodic/lib/libimage_transport.so;general;/opt/ros/melodic/lib/libmessage_filters.so;general;/opt/ros/melodic/lib/libnodeletlib.so;general;/opt/ros/melodic/lib/libbondcpp.so;general;/usr/lib/aarch64-linux-gnu/libuuid.so;general;/opt/ros/melodic/lib/libclass_loader.so;general;/usr/lib/libPocoFoundation.so;general;/usr/lib/aarch64-linux-gnu/libdl.so;general;/opt/ros/melodic/lib/libroslib.so;general;/opt/ros/melodic/lib/librospack.so;general;/usr/lib/aarch64-linux-gnu/libpython2.7.so;general;/usr/lib/aarch64-linux-gnu/libboost_program_options.so;general;/usr/lib/aarch64-linux-gnu/libtinyxml2.so;general;/opt/ros/melodic/lib/libcamera_info_manager.so;general;/opt/ros/melodic/lib/libcamera_calibration_parsers.so;general;/opt/ros/melodic/lib/libroscpp.so;general;/usr/lib/aarch64-linux-gnu/libboost_filesystem.so;general;/opt/ros/melodic/lib/librosconsole.so;general;/opt/ros/melodic/lib/librosconsole_log4cxx.so;general;/opt/ros/melodic/lib/librosconsole_backend_interface.so;general;/usr/lib/aarch64-linux-gnu/liblog4cxx.so;general;/usr/lib/aarch64-linux-gnu/libboost_regex.so;general;/opt/ros/melodic/lib/libxmlrpcpp.so;general;/opt/ros/melodic/lib/libroscpp_serialization.so;general;/opt/ros/melodic/lib/librostime.so;general;/opt/ros/melodic/lib/libcpp_common.so;general;/usr/lib/aarch64-linux-gnu/libboost_system.so;general;/usr/lib/aarch64-linux-gnu/libboost_thread.so;general;/usr/lib/aarch64-linux-gnu/libboost_chrono.so;general;/usr/lib/aarch64-linux-gnu/libboost_date_time.so;general;/usr/lib/aarch64-linux-gnu/libboost_atomic.so;general;/usr/lib/aarch64-linux-gnu/libpthread.so;general;/usr/lib/aarch64-linux-gnu/libconsole_bridge.so.0.4;general;gstreamer-1.0;general;gobject-2.0;general;glib-2.0;general;gstapp-1.0;general;gstbase-1.0;general;gstreamer-1.0;general;gobject-2.0;general;glib-2.0;
+
+//Value Computed by CMake
+gscam_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/gscam
+
+//Value Computed by CMake
 gtest_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/gtest/googlemock/gtest
 
 //Dependencies for the target
@@ -366,6 +419,24 @@ gtest_hide_internal_symbols:BOOL=OFF
 //Dependencies for the target
 gtest_main_LIB_DEPENDS:STATIC=general;-lpthread;general;gtest;
 
+//The directory containing a CMake configuration file for image_transport.
+image_transport_DIR:PATH=/opt/ros/melodic/share/image_transport/cmake
+
+//Value Computed by CMake
+jetson_camera_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/jetson_camera
+
+//Value Computed by CMake
+jetson_camera_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/jetson_camera
+
+//Dependencies for the target
+jetson_camera_nodelet_LIB_DEPENDS:STATIC=general;/opt/ros/melodic/lib/libcamera_info_manager.so;general;/opt/ros/melodic/lib/libcamera_calibration_parsers.so;general;/opt/ros/melodic/lib/libcv_bridge.so;general;/usr/lib/aarch64-linux-gnu/libopencv_core.so.3.2.0;general;/usr/lib/aarch64-linux-gnu/libopencv_imgproc.so.3.2.0;general;/usr/lib/aarch64-linux-gnu/libopencv_imgcodecs.so.3.2.0;general;/opt/ros/melodic/lib/libimage_transport.so;general;/opt/ros/melodic/lib/libmessage_filters.so;general;/opt/ros/melodic/lib/libnodeletlib.so;general;/opt/ros/melodic/lib/libbondcpp.so;general;/usr/lib/aarch64-linux-gnu/libuuid.so;general;/opt/ros/melodic/lib/libclass_loader.so;general;/usr/lib/libPocoFoundation.so;general;/usr/lib/aarch64-linux-gnu/libdl.so;general;/opt/ros/melodic/lib/libroslib.so;general;/opt/ros/melodic/lib/librospack.so;general;/usr/lib/aarch64-linux-gnu/libpython2.7.so;general;/usr/lib/aarch64-linux-gnu/libboost_program_options.so;general;/usr/lib/aarch64-linux-gnu/libtinyxml2.so;general;/opt/ros/melodic/lib/libroscpp.so;general;/usr/lib/aarch64-linux-gnu/libboost_filesystem.so;general;/opt/ros/melodic/lib/librosconsole.so;general;/opt/ros/melodic/lib/librosconsole_log4cxx.so;general;/opt/ros/melodic/lib/librosconsole_backend_interface.so;general;/usr/lib/aarch64-linux-gnu/liblog4cxx.so;general;/usr/lib/aarch64-linux-gnu/libboost_regex.so;general;/opt/ros/melodic/lib/libxmlrpcpp.so;general;/opt/ros/melodic/lib/libroscpp_serialization.so;general;/opt/ros/melodic/lib/librostime.so;general;/opt/ros/melodic/lib/libcpp_common.so;general;/usr/lib/aarch64-linux-gnu/libboost_system.so;general;/usr/lib/aarch64-linux-gnu/libboost_thread.so;general;/usr/lib/aarch64-linux-gnu/libboost_chrono.so;general;/usr/lib/aarch64-linux-gnu/libboost_date_time.so;general;/usr/lib/aarch64-linux-gnu/libboost_atomic.so;general;/usr/lib/aarch64-linux-gnu/libpthread.so;general;/usr/lib/aarch64-linux-gnu/libconsole_bridge.so.0.4;general;opencv_calib3d;general;opencv_core;general;opencv_dnn;general;opencv_features2d;general;opencv_flann;general;opencv_gapi;general;opencv_highgui;general;opencv_imgcodecs;general;opencv_imgproc;general;opencv_ml;general;opencv_objdetect;general;opencv_photo;general;opencv_stitching;general;opencv_video;general;opencv_videoio;
+
+//Value Computed by CMake
+jetson_csi_cam_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/jetson_csi_cam
+
+//Value Computed by CMake
+jetson_csi_cam_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/jetson_csi_cam
+
 //The directory containing a CMake configuration file for joy.
 joy_DIR:PATH=/opt/ros/melodic/share/joy/cmake
 
@@ -376,7 +447,13 @@ learning_joy_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/bui
 learning_joy_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/learning_joy
 
 //Path to a library.
-lib:FILEPATH=/opt/ros/melodic/lib/libtf2.so
+lib:FILEPATH=/opt/ros/melodic/lib/libbondcpp.so
+
+//Value Computed by CMake
+line_follower_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/line_follower
+
+//Value Computed by CMake
+line_follower_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/line_follower
 
 //Value Computed by CMake
 localization_data_pub_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/localization_data_pub
@@ -392,6 +469,24 @@ message_generation_DIR:PATH=/opt/ros/melodic/share/message_generation/cmake
 
 //The directory containing a CMake configuration file for message_runtime.
 message_runtime_DIR:PATH=/opt/ros/melodic/share/message_runtime/cmake
+
+//The directory containing a CMake configuration file for nodelet.
+nodelet_DIR:PATH=/opt/ros/melodic/share/nodelet/cmake
+
+//The directory containing a CMake configuration file for pluginlib.
+pluginlib_DIR:PATH=/opt/ros/melodic/share/pluginlib/cmake
+
+//Value Computed by CMake
+raspicam_node_BINARY_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/build/raspicam_node
+
+//Value Computed by CMake
+raspicam_node_SOURCE_DIR:STATIC=/home/alexander/Documents/simpleBot/catkin_ws/src/raspicam_node
+
+//Dependencies for target
+raspicamcontrol_LIB_DEPENDS:STATIC=
+
+//Dependencies for target
+raspicli_LIB_DEPENDS:STATIC=
 
 //The directory containing a CMake configuration file for rosconsole.
 rosconsole_DIR:PATH=/opt/ros/melodic/share/rosconsole/cmake
@@ -411,6 +506,12 @@ rosgraph_DIR:PATH=/opt/ros/melodic/share/rosgraph/cmake
 //The directory containing a CMake configuration file for rosgraph_msgs.
 rosgraph_msgs_DIR:PATH=/opt/ros/melodic/share/rosgraph_msgs/cmake
 
+//The directory containing a CMake configuration file for roslib.
+roslib_DIR:PATH=/opt/ros/melodic/share/roslib/cmake
+
+//The directory containing a CMake configuration file for rospack.
+rospack_DIR:PATH=/opt/ros/melodic/share/rospack/cmake
+
 //The directory containing a CMake configuration file for rospy.
 rospy_DIR:PATH=/opt/ros/melodic/share/rospy/cmake
 
@@ -419,6 +520,9 @@ rostime_DIR:PATH=/opt/ros/melodic/share/rostime/cmake
 
 //The directory containing a CMake configuration file for sensor_msgs.
 sensor_msgs_DIR:PATH=/opt/ros/melodic/share/sensor_msgs/cmake
+
+//The directory containing a CMake configuration file for smclib.
+smclib_DIR:PATH=/opt/ros/melodic/share/smclib/cmake
 
 //The directory containing a CMake configuration file for std_msgs.
 std_msgs_DIR:PATH=/opt/ros/melodic/share/std_msgs/cmake
@@ -554,7 +658,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=5
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -595,6 +699,10 @@ CMAKE_STRIP-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding OpenCV
+FIND_PACKAGE_MESSAGE_DETAILS_OpenCV:INTERNAL=[/usr][v4.1.1(4)]
+//Details about finding PkgConfig
+FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v0.29.1()]
 //Details about finding PythonInterp
 FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/usr/bin/python2][v2.7.17()]
 //Details about finding Threads
@@ -604,6 +712,78 @@ GMOCK_FROM_SOURCE_INCLUDE_DIRS:INTERNAL=/usr/include
 GMOCK_FROM_SOURCE_LIBRARIES:INTERNAL=gmock
 GMOCK_FROM_SOURCE_LIBRARY_DIRS:INTERNAL=/home/alexander/Documents/simpleBot/catkin_ws/build/gmock
 GMOCK_FROM_SOURCE_MAIN_LIBRARIES:INTERNAL=gmock_main
+GSTREAMER_CFLAGS:INTERNAL=-pthread;-I/usr/include/gstreamer-1.0;-I/usr/include/glib-2.0;-I/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GSTREAMER_CFLAGS_I:INTERNAL=
+GSTREAMER_CFLAGS_OTHER:INTERNAL=-pthread
+GSTREAMER_FOUND:INTERNAL=1
+GSTREAMER_INCLUDEDIR:INTERNAL=/usr/include/gstreamer-1.0
+GSTREAMER_INCLUDE_DIRS:INTERNAL=/usr/include/gstreamer-1.0;/usr/include/glib-2.0;/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GSTREAMER_LDFLAGS:INTERNAL=-lgstreamer-1.0;-lgobject-2.0;-lglib-2.0
+GSTREAMER_LDFLAGS_OTHER:INTERNAL=
+GSTREAMER_LIBDIR:INTERNAL=/usr/lib/aarch64-linux-gnu
+GSTREAMER_LIBRARIES:INTERNAL=gstreamer-1.0;gobject-2.0;glib-2.0
+GSTREAMER_LIBRARY_DIRS:INTERNAL=
+GSTREAMER_LIBS:INTERNAL=
+GSTREAMER_LIBS_L:INTERNAL=
+GSTREAMER_LIBS_OTHER:INTERNAL=
+GSTREAMER_LIBS_PATHS:INTERNAL=
+GSTREAMER_PREFIX:INTERNAL=/usr
+GSTREAMER_STATIC_CFLAGS:INTERNAL=-pthread;-I/usr/include/gstreamer-1.0;-I/usr/include/glib-2.0;-I/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GSTREAMER_STATIC_CFLAGS_I:INTERNAL=
+GSTREAMER_STATIC_CFLAGS_OTHER:INTERNAL=-pthread
+GSTREAMER_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/gstreamer-1.0;/usr/include/glib-2.0;/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GSTREAMER_STATIC_LDFLAGS:INTERNAL=-lgstreamer-1.0;-lgmodule-2.0;-pthread;-ldl;-lgobject-2.0;-lffi;-lglib-2.0;-pthread;-lpcre;-pthread
+GSTREAMER_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread
+GSTREAMER_STATIC_LIBDIR:INTERNAL=
+GSTREAMER_STATIC_LIBRARIES:INTERNAL=gstreamer-1.0;gmodule-2.0;dl;gobject-2.0;ffi;glib-2.0;pcre
+GSTREAMER_STATIC_LIBRARY_DIRS:INTERNAL=
+GSTREAMER_STATIC_LIBS:INTERNAL=
+GSTREAMER_STATIC_LIBS_L:INTERNAL=
+GSTREAMER_STATIC_LIBS_OTHER:INTERNAL=
+GSTREAMER_STATIC_LIBS_PATHS:INTERNAL=
+GSTREAMER_VERSION:INTERNAL=1.14.5
+GSTREAMER_gstreamer-0.10_INCLUDEDIR:INTERNAL=
+GSTREAMER_gstreamer-0.10_LIBDIR:INTERNAL=
+GSTREAMER_gstreamer-0.10_PREFIX:INTERNAL=
+GSTREAMER_gstreamer-0.10_VERSION:INTERNAL=
+GSTREAMER_gstreamer-1.0_INCLUDEDIR:INTERNAL=
+GSTREAMER_gstreamer-1.0_LIBDIR:INTERNAL=
+GSTREAMER_gstreamer-1.0_PREFIX:INTERNAL=
+GSTREAMER_gstreamer-1.0_VERSION:INTERNAL=
+GST_APP_CFLAGS:INTERNAL=-pthread;-I/usr/include/gstreamer-1.0;-I/usr/include/glib-2.0;-I/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GST_APP_CFLAGS_I:INTERNAL=
+GST_APP_CFLAGS_OTHER:INTERNAL=-pthread
+GST_APP_FOUND:INTERNAL=1
+GST_APP_INCLUDEDIR:INTERNAL=/usr/include/gstreamer-1.0
+GST_APP_INCLUDE_DIRS:INTERNAL=/usr/include/gstreamer-1.0;/usr/include/glib-2.0;/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GST_APP_LDFLAGS:INTERNAL=-lgstapp-1.0;-lgstbase-1.0;-lgstreamer-1.0;-lgobject-2.0;-lglib-2.0
+GST_APP_LDFLAGS_OTHER:INTERNAL=
+GST_APP_LIBDIR:INTERNAL=/usr/lib/aarch64-linux-gnu
+GST_APP_LIBRARIES:INTERNAL=gstapp-1.0;gstbase-1.0;gstreamer-1.0;gobject-2.0;glib-2.0
+GST_APP_LIBRARY_DIRS:INTERNAL=
+GST_APP_LIBS:INTERNAL=
+GST_APP_LIBS_L:INTERNAL=
+GST_APP_LIBS_OTHER:INTERNAL=
+GST_APP_LIBS_PATHS:INTERNAL=
+GST_APP_PREFIX:INTERNAL=/usr
+GST_APP_STATIC_CFLAGS:INTERNAL=-pthread;-I/usr/include/gstreamer-1.0;-I/usr/include/glib-2.0;-I/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GST_APP_STATIC_CFLAGS_I:INTERNAL=
+GST_APP_STATIC_CFLAGS_OTHER:INTERNAL=-pthread
+GST_APP_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/gstreamer-1.0;/usr/include/glib-2.0;/usr/lib/aarch64-linux-gnu/glib-2.0/include
+GST_APP_STATIC_LDFLAGS:INTERNAL=-lgstapp-1.0;-lgstbase-1.0;-lgstreamer-1.0;-lgmodule-2.0;-pthread;-ldl;-lgobject-2.0;-lffi;-lglib-2.0;-pthread;-lpcre;-pthread
+GST_APP_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread
+GST_APP_STATIC_LIBDIR:INTERNAL=
+GST_APP_STATIC_LIBRARIES:INTERNAL=gstapp-1.0;gstbase-1.0;gstreamer-1.0;gmodule-2.0;dl;gobject-2.0;ffi;glib-2.0;pcre
+GST_APP_STATIC_LIBRARY_DIRS:INTERNAL=
+GST_APP_STATIC_LIBS:INTERNAL=
+GST_APP_STATIC_LIBS_L:INTERNAL=
+GST_APP_STATIC_LIBS_OTHER:INTERNAL=
+GST_APP_STATIC_LIBS_PATHS:INTERNAL=
+GST_APP_VERSION:INTERNAL=1.14.5
+GST_APP_gstreamer-app-1.0_INCLUDEDIR:INTERNAL=
+GST_APP_gstreamer-app-1.0_LIBDIR:INTERNAL=
+GST_APP_gstreamer-app-1.0_PREFIX:INTERNAL=
+GST_APP_gstreamer-app-1.0_VERSION:INTERNAL=
 GTEST_FROM_SOURCE_FOUND:INTERNAL=TRUE
 GTEST_FROM_SOURCE_INCLUDE_DIRS:INTERNAL=/usr/include
 GTEST_FROM_SOURCE_LIBRARIES:INTERNAL=gtest
@@ -619,10 +799,17 @@ GTEST_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 GTEST_MAIN_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: GTEST_MAIN_LIBRARY_DEBUG
 GTEST_MAIN_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
+PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PYTHON_EXECUTABLE
 PYTHON_EXECUTABLE-ADVANCED:INTERNAL=1
 //This needs to be in PYTHONPATH when 'setup.py install' is called.
 //  And it needs to match.  But setuptools won't tell us where
 // it will install things.
 PYTHON_INSTALL_DIR:INTERNAL=lib/python2.7/dist-packages
+__pkg_config_arguments_GSTREAMER:INTERNAL=REQUIRED;gstreamer-1.0
+__pkg_config_arguments_GST_APP:INTERNAL=REQUIRED;gstreamer-app-1.0
+__pkg_config_checked_GSTREAMER:INTERNAL=1
+__pkg_config_checked_GST_APP:INTERNAL=1
+prefix_result:INTERNAL=/usr/lib/aarch64-linux-gnu
 
