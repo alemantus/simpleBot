@@ -24,14 +24,14 @@ class Follower:
     self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
     self.twist = Twist()
 
-   #self.upperThreshold = rospy.set_param('image_proc/upperThreshold', 255)
-  #self.lowerThreshold = rospy.set_param('/image_proc/lowerThreshold', 200)
+    self.upperThreshold = rospy.set_param('image_proc/upperThreshold', 255)
+    self.lowerThreshold = rospy.set_param('/image_proc/lowerThreshold', 160)
 
 
   def image_callback(self, msg):
 
-    #self.upperThreshold = rospy.get_param('image_proc/upperThreshold')
-    #self.lowerThreshold = rospy.get_param('image_proc/lowerThreshold')
+    self.upperThreshold = rospy.get_param('image_proc/upperThreshold')
+    self.lowerThreshold = rospy.get_param('image_proc/lowerThreshold')
 
     self.image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
 
@@ -44,7 +44,7 @@ class Follower:
 
     img_gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
     img_gray = cv2.GaussianBlur(img_gray, (7, 7), 0)
-    (T, mask) = cv2.threshold(img_gray, 200, 255,cv2.THRESH_BINARY)
+    (T, mask) = cv2.threshold(img_gray, self.lowerThreshold, self.upperThreshold,cv2.THRESH_BINARY)
     
     h, w, d = self.image.shape
     search_top = 3*h/4
