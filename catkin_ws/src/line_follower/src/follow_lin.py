@@ -25,13 +25,14 @@ class Follower:
     self.twist = Twist()
 
     self.upperThreshold = rospy.set_param('image_proc/upperThreshold', 255)
-    self.lowerThreshold = rospy.set_param('/image_proc/lowerThreshold', 160)
-
+    self.lowerThreshold = rospy.set_param('/image_proc/lowerThreshold', 150)
+    self.lowerThreshold = rospy.set_param('/image_proc/seachArea', 20)
 
   def image_callback(self, msg):
 
     self.upperThreshold = rospy.get_param('image_proc/upperThreshold')
     self.lowerThreshold = rospy.get_param('image_proc/lowerThreshold')
+    self.searchArea = rospy.get_param('/image_proc/seachArea')
 
     self.image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
 
@@ -41,40 +42,87 @@ class Follower:
     #lower_yellow = numpy.array([ 10,  10,  10])
     #upper_yellow = numpy.array([255, 255, 250])
     #mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
+    h, w, d = self.image.shape
+    ROI = self.image[h/3:h/3+h, 0:w]
 
-    img_gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+    img_gray = cv2.cvtColor(ROI, cv2.COLOR_BGR2GRAY)
     img_gray = cv2.GaussianBlur(img_gray, (7, 7), 0)
     (T, mask) = cv2.threshold(img_gray, self.lowerThreshold, self.upperThreshold,cv2.THRESH_BINARY)
-    
-    h, w, d = self.image.shape
-    search_top = 3*h/4
-    search_bot = 3*h/4 + 20
+    fullMask = mask.copy()
+
+    search_top = h/4
+    search_bot = h/4+20
     mask[0:search_top, 0:w] = 0
     mask[search_bot:h, 0:w] = 0
+    
+
     M = cv2.moments(mask)
     if M['m00'] > 0:
       cx = int(M['m10']/M['m00'])
+      #cy = int(M['m00']/M['m01'])
       cy = int(M['m01']/M['m00'])
-      cv2.circle(self.image, (cx, cy), 20, (0,0,255), -1)
+      h, w, d = ROI.shape
+      
+      
+      
+      #cv2.circle(ROI, (cx, cy), 20, (0,0,255), -1)
+
+      path = 0
+      
+      if(path == 1):
+        mask_right =  mask[0:h,w/2:w]
+        M_right = cv2.moments(mask_right)
+        if M_right['m00'] > 0:
+          cx2 = int(M_right['m10']/M_right['m00'])
+          #cy = int(M['m00']/M['m01'])
+          cy2 = int(M_right['m01']/M_right['m00'])
+          cv2.circle(mask_right, (cx2, cy2), 20, (0,0,255), -1)
+
+          newImage = mask_right.copy()
+
+      elif(path == 0):
+        mask_left =  mask[0:h,0:w/2]
+        M_left = cv2.moments(mask_left)
+        if M_left['m00'] > 0:
+          cx2 = int(M_left['m10']/M_left['m00'])
+          #cy = int(M['m00']/M['m01'])
+          cy2 = int(M_left['m01']/M_left['m00'])
+
+          cv2.circle(mask_left, (cx2, cy2), 20, (0,0,255), -1)
+
+          newImage = mask_left.copy()
+
       # CONTROL starts
-      err = cx - w/2
+      err = cx2 - w/2
       self.twist.linear.x = 0.2
       self.twist.angular.z = -float(err) / 80
 
       rospy.logdebug("z error %f", -float(err) / 80)
       self.cmd_vel_pub.publish(self.twist)
+  
 
+      
+
+
+      #finding contours 
+      cnts = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+      cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+
+      #drawing Contours
+      radius =2
+      color = (30,255,50)
+      #cv2.drawContours(newImage, cnts[0], -1,color , radius)
 
 
       msg = CompressedImage()
       msg.header.stamp = rospy.Time.now()
       msg.format = "jpeg"
-      msg.data = np.array(cv2.imencode('.jpg', self.image)[1]).tostring()
+      msg.data = np.array(cv2.imencode('.jpg', newImage)[1]).tostring()
 
       mask_pub = CompressedImage()
       mask_pub.header.stamp = rospy.Time.now()
       mask_pub.format = "jpeg"
-      mask_pub.data = np.array(cv2.imencode('.jpg', mask)[1]).tostring()
+      mask_pub.data = np.array(cv2.imencode('.jpg', ROI)[1]).tostring()
 
 
       self.image_comp_pub.publish(msg)
