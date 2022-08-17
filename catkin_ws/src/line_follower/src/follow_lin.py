@@ -80,20 +80,21 @@ class Follower:
 
           newImage = mask_right.copy()
 
-      elif(path == 0):
+      elif(path == 2):
         mask_left =  mask[0:h,0:w/2]
         M_left = cv2.moments(mask_left)
         if M_left['m00'] > 0:
-          cx2 = int(M_left['m10']/M_left['m00'])
+          cx = int(M_left['m10']/M_left['m00'])
           #cy = int(M['m00']/M['m01'])
-          cy2 = int(M_left['m01']/M_left['m00'])
+          cy = int(M_left['m01']/M_left['m00'])
 
-          cv2.circle(mask_left, (cx2, cy2), 20, (0,0,255), -1)
+          cv2.circle(mask_left, (cx, cy), 20, (0,0,255), -1)
 
           newImage = mask_left.copy()
-
+      
+      newImage = ROI.copy()
       # CONTROL starts
-      err = cx2 - w/2
+      err = cx - w/2
       self.twist.linear.x = 0.2
       self.twist.angular.z = -float(err) / 80
 
