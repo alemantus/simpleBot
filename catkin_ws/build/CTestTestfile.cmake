@@ -7,5 +7,4 @@
 subdirs("gtest")
 subdirs("line_follower")
 subdirs("localization_data_pub")
-subdirs("gscam")
 subdirs("jetson_camera")

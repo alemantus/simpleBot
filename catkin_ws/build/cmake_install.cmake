@@ -133,7 +133,6 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/alexander/Documents/simpleBot/catkin_ws/build/gtest/cmake_install.cmake")
   include("/home/alexander/Documents/simpleBot/catkin_ws/build/line_follower/cmake_install.cmake")
   include("/home/alexander/Documents/simpleBot/catkin_ws/build/localization_data_pub/cmake_install.cmake")
-  include("/home/alexander/Documents/simpleBot/catkin_ws/build/gscam/cmake_install.cmake")
   include("/home/alexander/Documents/simpleBot/catkin_ws/build/jetson_camera/cmake_install.cmake")
 
 endif()

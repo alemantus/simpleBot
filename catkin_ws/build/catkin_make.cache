@@ -1,2 +1,2 @@
-gscam:jetson_camera:line_follower:localization_data_pub
+jetson_camera:line_follower:localization_data_pub
 -DCATKIN_DEVEL_PREFIX=/home/alexander/Documents/simpleBot/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/alexander/Documents/simpleBot/catkin_ws/install -G Unix Makefiles
