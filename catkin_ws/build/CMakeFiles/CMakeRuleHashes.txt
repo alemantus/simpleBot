@@ -1,3 +1,0 @@
-# Hashes of file build rules.
-a0abd9df896d5898d5fddd14ca3bb970 /home/alexander/Documents/simpleBot/catkin_ws/devel/include/raspicam_node/CameraConfig.h
-ca542e500b93fdc26184b1e7e8f20c76 CMakeFiles/clean_test_results
