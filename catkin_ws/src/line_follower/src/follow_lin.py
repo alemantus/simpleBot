@@ -36,102 +36,74 @@ class Follower:
 
     self.image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
 
-    #image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE) 
-    #hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
-    # change below lines to map the color you wanted robot to follow
-    #lower_yellow = numpy.array([ 10,  10,  10])
-    #upper_yellow = numpy.array([255, 255, 250])
-    #mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
+
     h, w, d = self.image.shape
     ROI = self.image[h/3:h/3+h, 0:w]
 
     img_gray = cv2.cvtColor(ROI, cv2.COLOR_BGR2GRAY)
     img_gray = cv2.GaussianBlur(img_gray, (7, 7), 0)
     (T, mask) = cv2.threshold(img_gray, self.lowerThreshold, self.upperThreshold,cv2.THRESH_BINARY)
-    fullMask = mask.copy()
 
     search_top = h/4
     search_bot = h/4+20
     mask[0:search_top, 0:w] = 0
     mask[search_bot:h, 0:w] = 0
+
+
+    contours,hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    numberOfContours = len(contours)
+    x = [None]*len(contours)
+    y = [None]*len(contours)
+    w = [None]*len(contours)
+    h = [None]*len(contours)
+    a = [None]*len(contours)
+
+    
+    path="left"
+    for i,c in enumerate(contours):
+      x[i], y[i], w[i], h[i] = cv2.boundingRect(c)
+      
+      a[i] = w[i]*h[i]
+
+    # If there are more than 1 contour and the smallest one has a large area
+    if (len(contours) > 1 and np.min(a)>600):
+      rospy.logdebug("Crossdetected")
     
 
-    M = cv2.moments(mask)
-    if M['m00'] > 0:
-      cx = int(M['m10']/M['m00'])
-      #cy = int(M['m00']/M['m01'])
-      cy = int(M['m01']/M['m00'])
-      h, w, d = ROI.shape
-      
-      
-      
-      #cv2.circle(ROI, (cx, cy), 20, (0,0,255), -1)
+      if path == "left":
+        index = np.argmin(x)
 
-      path = 0
-      
-      if(path == 1):
-        mask_right =  mask[0:h,w/2:w]
-        M_right = cv2.moments(mask_right)
-        if M_right['m00'] > 0:
-          cx2 = int(M_right['m10']/M_right['m00'])
-          #cy = int(M['m00']/M['m01'])
-          cy2 = int(M_right['m01']/M_right['m00'])
-          cv2.circle(mask_right, (cx2, cy2), 20, (0,0,255), -1)
+        cv2.rectangle(ROI, (x[index],y[index]), (x[index]+w[index], y[index]+h[index]), (0, 0, 255), 2)
+        cv2.circle(ROI, (x[index]+w[index]/2, y[index]+h[index]/2), 20, (0,0,255), -1)
+        
+      if path == "right":
+        index = np.argmax(x)
+        cv2.rectangle(ROI, (x[index],y[index]), (x[index]+w[index], y[index]+h[index]), (0, 0, 255), 2)
+        cv2.circle(ROI, (x[index]+w[index]/2, y[index]+h[index]/2), 20, (0,0,255), -1)
 
-          newImage = mask_right.copy()
-
-      elif(path == 2):
-        mask_left =  mask[0:h,0:w/2]
-        M_left = cv2.moments(mask_left)
-        if M_left['m00'] > 0:
-          cx = int(M_left['m10']/M_left['m00'])
-          #cy = int(M['m00']/M['m01'])
-          cy = int(M_left['m01']/M_left['m00'])
-
-          cv2.circle(mask_left, (cx, cy), 20, (0,0,255), -1)
-
-          newImage = mask_left.copy()
-      
-      newImage = ROI.copy()
-      # CONTROL starts
-      err = cx - w/2
-      self.twist.linear.x = 0.2
-      self.twist.angular.z = -float(err) / 80
-
-      rospy.logdebug("z error %f", -float(err) / 80)
-      self.cmd_vel_pub.publish(self.twist)
-  
-
-      
+    else:
+      rospy.logdebug("single line")
+      cv2.rectangle(ROI, (x[0],y[0]), (x[0]+w[0], y[0]+h[0]), (0, 0, 255), 2)
+      cv2.circle(ROI, (x[0]+w[0]/2, y[0]+h[0]/2), 20, (0,0,255), -1)
 
 
-      #finding contours 
-      cnts = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-      cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    msg = CompressedImage()
+    msg.header.stamp = rospy.Time.now()
+    msg.format = "jpeg"
+    msg.data = np.array(cv2.imencode('.jpg', ROI)[1]).tostring()
 
-      #drawing Contours
-      radius =2
-      color = (30,255,50)
-      #cv2.drawContours(newImage, cnts[0], -1,color , radius)
-
-
-      msg = CompressedImage()
-      msg.header.stamp = rospy.Time.now()
-      msg.format = "jpeg"
-      msg.data = np.array(cv2.imencode('.jpg', newImage)[1]).tostring()
-
-      mask_pub = CompressedImage()
-      mask_pub.header.stamp = rospy.Time.now()
-      mask_pub.format = "jpeg"
-      mask_pub.data = np.array(cv2.imencode('.jpg', ROI)[1]).tostring()
+    mask_pub = CompressedImage()
+    mask_pub.header.stamp = rospy.Time.now()
+    mask_pub.format = "jpeg"
+    mask_pub.data = np.array(cv2.imencode('.jpg', mask)[1]).tostring()
 
 
-      self.image_comp_pub.publish(msg)
-      self.mask_comp_pub.publish(mask_pub)
+    self.image_comp_pub.publish(msg)
+    self.mask_comp_pub.publish(mask_pub)
       # CONTROL ends
 
 
-rospy.init_node('follower', log_level=rospy.DEBUG)
+rospy.init_node('line_follower', log_level=rospy.DEBUG)
 follower = Follower()
 rospy.spin()
 # END ALL
