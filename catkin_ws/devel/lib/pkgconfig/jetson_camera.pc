@@ -1,8 +1,0 @@
-prefix=/home/alexander/Documents/simpleBot/catkin_ws/devel
-
-Name: jetson_camera
-Description: Description of jetson_camera
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

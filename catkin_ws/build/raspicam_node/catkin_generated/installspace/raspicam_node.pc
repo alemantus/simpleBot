@@ -1,8 +1,0 @@
-prefix=/home/alexander/Documents/simpleBot/catkin_ws/install
-
-Name: raspicam_node
-Description: Description of raspicam_node
-Version: 1.0.1
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: 
