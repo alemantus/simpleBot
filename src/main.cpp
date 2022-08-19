@@ -283,8 +283,8 @@ void loop()
         Ko = 120;
     }
     */
-    // bat_voltage.data = ina219.getBusVoltage_V();
-    // bat_current.data = ina219.getPower_mW();
+    bat_voltage.data = ina219.getBusVoltage_V();
+    bat_current.data = ina219.getPower_mW();
 
     // Publish tick counter for odom
     if (millis() > nextOdom)
@@ -293,8 +293,8 @@ void loop()
         left_wheel_tick_count.data = myEnc2.read();  // left encoder
         rightPub.publish(&right_wheel_tick_count);
         leftPub.publish(&left_wheel_tick_count);
-        // batVoltagePub.publish(&bat_voltage);
-        // batCurrentPub.publish(&bat_current);
+        batVoltagePub.publish(&bat_voltage);
+        batCurrentPub.publish(&bat_current);
         nextOdom += ODOM_INTERVAL;
     }
 
