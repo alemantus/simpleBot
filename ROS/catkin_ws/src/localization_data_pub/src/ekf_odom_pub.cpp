@@ -1,3 +1,30 @@
+/*
+ * Automatic Addison
+ * https://automaticaddison.com/how-to-publish-wheel-odometry-information-over-ros/
+ * Date: May 20, 2021
+ * ROS Version: ROS 1 - Melodic
+ * Website: https://automaticaddison.com
+ * Publishes odometry information for use with robot_pose_ekf package.
+ *   This odometry information is based on wheel encoder tick counts.
+ * Subscribe: ROS node that subscribes to the following topics:
+ *  right_ticks : Tick counts from the right motor encoder (std_msgs/Int16)
+ * 
+ *  left_ticks : Tick counts from the left motor encoder  (std_msgs/Int16)
+ * 
+ *  initial_2d : The initial position and orientation of the robot.
+ *               (geometry_msgs/PoseStamped)
+ *
+ * Publish: This node will publish to the following topics:
+ *  odom_data_euler : Position and velocity estimate. The orientation.z 
+ *                    variable is an Euler angle representing the yaw angle.
+ *                    (nav_msgs/Odometry)
+ *  odom_data_quat : Position and velocity estimate. The orientation is 
+ *                   in quaternion format.
+ *                   (nav_msgs/Odometry)
+ * Modified from Practical Robotics in C++ book (ISBN-10 : 9389423465)
+ *   by Lloyd Brombach
+ */
+
 // Include various libraries
 #include "ros/ros.h"
 #include "std_msgs/Int64.h"
